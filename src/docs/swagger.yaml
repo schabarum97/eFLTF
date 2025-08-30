@@ -1,0 +1,1883 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Projeto Back TCC",
+    "description": "Documentação da Projeto Back TCC"
+  },
+  "host": "localhost:3000",
+  "basePath": "",
+  "schemes": [
+    ""
+  ],
+  "consumes": [
+    "aplication/json"
+  ],
+  "produces": [
+    "aplication/json"
+  ],
+  "paths": {
+    "/cliente": {
+      "get": {
+        "tags": [
+          "Cliente"
+        ],
+        "summary": "Lista todos os Clientes",
+        "description": "Retorna a lista completa de clientes cadastrados",
+        "responses": {
+          "200": {
+            "description": "Sucesso!",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total": {
+                  "type": "number",
+                  "example": 2
+                },
+                "clientes": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "cli_id": {
+                        "type": "number",
+                        "example": 2
+                      },
+                      "cli_cnpj": {
+                        "type": "string",
+                        "example": "98765432000188"
+                      },
+                      "cli_nome": {
+                        "type": "string",
+                        "example": "Tech Solutions"
+                      },
+                      "cli_ddi": {
+                        "type": "string",
+                        "example": "55"
+                      },
+                      "cli_ddd": {
+                        "type": "string",
+                        "example": "21"
+                      },
+                      "cli_fone": {
+                        "type": "string",
+                        "example": "123456789"
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno ao buscar clientes"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Cliente"
+        ],
+        "summary": "Cria um novo Cliente",
+        "description": "Cria um novo Cliente no sistema",
+        "parameters": [
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Dados para criar um novo Cliente",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "cnpj": {
+                  "type": "string",
+                  "example": "11222333000155"
+                },
+                "nome": {
+                  "type": "string",
+                  "example": "Nova Empresa"
+                },
+                "ddi": {
+                  "type": "string",
+                  "example": "55"
+                },
+                "ddd": {
+                  "type": "string",
+                  "example": "41"
+                },
+                "fone": {
+                  "type": "string",
+                  "example": "99887766"
+                }
+              },
+              "required": [
+                "cnpj",
+                "nome",
+                "ddi",
+                "ddd",
+                "fone"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Cliente criado",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Cliente criado com sucesso!"
+                },
+                "id": {
+                  "type": "number",
+                  "example": 1
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "500": {
+            "description": "Erro ao tentar criar o Cliente",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Erro no servidor!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cliente/id/{id}": {
+      "get": {
+        "tags": [
+          "Cliente"
+        ],
+        "summary": "Consulta Cliente por ID",
+        "description": "Consulta os detalhes de um Cliente específico pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID do Cliente",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso!",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total": {
+                  "type": "number",
+                  "example": 1
+                },
+                "cliente": {
+                  "type": "object",
+                  "properties": {
+                    "cli_id": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "cli_cnpj": {
+                      "type": "string",
+                      "example": "12345678000199"
+                    },
+                    "cli_nome": {
+                      "type": "string",
+                      "example": "Empresa XPTO LTDA"
+                    },
+                    "cli_ddi": {
+                      "type": "string",
+                      "example": "55"
+                    },
+                    "cli_ddd": {
+                      "type": "string",
+                      "example": "11"
+                    },
+                    "cli_fone": {
+                      "type": "string",
+                      "example": "987654321"
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Cliente não encontrado"
+          },
+          "500": {
+            "description": "Erro interno ao tentar fazer a busca"
+          }
+        }
+      }
+    },
+    "/cliente/{id}": {
+      "put": {
+        "tags": [
+          "Cliente"
+        ],
+        "summary": "Atualiza Cliente por ID",
+        "description": "Atualiza os detalhes de um Cliente específico pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID do Cliente",
+            "example": 1
+          },
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Dados para atualizar o Cliente",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "cnpj": {
+                  "type": "string",
+                  "example": "11222333000155"
+                },
+                "nome": {
+                  "type": "string",
+                  "example": "Empresa Atualizada"
+                },
+                "ddi": {
+                  "type": "string",
+                  "example": "55"
+                },
+                "ddd": {
+                  "type": "string",
+                  "example": "41"
+                },
+                "fone": {
+                  "type": "string",
+                  "example": "99887766"
+                }
+              },
+              "required": [
+                "cnpj",
+                "nome",
+                "ddi",
+                "ddd",
+                "fone"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cliente atualizado",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Cliente atualizado com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Cliente não encontrado"
+          },
+          "500": {
+            "description": "Erro ao tentar atualizar o Cliente"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Cliente"
+        ],
+        "summary": "Atualiza parcialmente Cliente por ID",
+        "description": "Atualiza parcialmente os dados de um Cliente específico pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID do Cliente",
+            "example": 1
+          },
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Dados para atualizar parcialmente o Cliente",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nome": {
+                  "type": "string",
+                  "example": "Empresa Parcialmente Atualizada"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cliente atualizado",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Cliente atualizado com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Cliente não encontrado"
+          },
+          "500": {
+            "description": "Erro ao tentar atualizar o Cliente"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Cliente"
+        ],
+        "summary": "Deleta Cliente por ID",
+        "description": "Deleta um Cliente específico pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID do Cliente",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Cliente deletado",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Cliente deletado com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Cliente não encontrado"
+          },
+          "500": {
+            "description": "Erro ao tentar deletar o Cliente"
+          }
+        }
+      }
+    },
+    "/uf": {
+      "get": {
+        "tags": [
+          "UF"
+        ],
+        "summary": "Lista todas as UFs",
+        "description": "Retorna a lista completa de UFs cadastradas",
+        "responses": {
+          "200": {
+            "description": "Sucesso!",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total": {
+                  "type": "number",
+                  "example": 2
+                },
+                "ufs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "uf_id": {
+                        "type": "number",
+                        "example": 2
+                      },
+                      "uf_nome": {
+                        "type": "string",
+                        "example": "Rio de Janeiro"
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno ao buscar UFs"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "UF"
+        ],
+        "summary": "Cria uma nova UF",
+        "description": "Cria uma nova UF no sistema",
+        "parameters": [
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Dados para criar uma nova UF",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nome": {
+                  "type": "string",
+                  "example": "Minas Gerais"
+                }
+              },
+              "required": [
+                "nome"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "UF criada",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "UF criada com sucesso!"
+                },
+                "id": {
+                  "type": "number",
+                  "example": 1
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "500": {
+            "description": "Erro ao tentar criar a UF"
+          }
+        }
+      }
+    },
+    "/uf/id/{id}": {
+      "get": {
+        "tags": [
+          "UF"
+        ],
+        "summary": "Consulta UF por ID",
+        "description": "Consulta os detalhes de uma UF específica pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID da UF",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso!",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total": {
+                  "type": "number",
+                  "example": 1
+                },
+                "uf": {
+                  "type": "object",
+                  "properties": {
+                    "uf_id": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "uf_nome": {
+                      "type": "string",
+                      "example": "São Paulo"
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "UF não encontrada"
+          },
+          "500": {
+            "description": "Erro interno ao tentar fazer a busca"
+          }
+        }
+      }
+    },
+    "/uf/{id}": {
+      "put": {
+        "tags": [
+          "UF"
+        ],
+        "summary": "Atualiza UF por ID",
+        "description": "Atualiza os detalhes de uma UF específica pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID da UF",
+            "example": 1
+          },
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Dados para atualizar a UF",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nome": {
+                  "type": "string",
+                  "example": "São Paulo Atualizada"
+                }
+              },
+              "required": [
+                "nome"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "UF atualizada",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "UF atualizada com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "UF não encontrada"
+          },
+          "500": {
+            "description": "Erro ao tentar atualizar a UF"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "UF"
+        ],
+        "summary": "Atualiza parcialmente UF por ID",
+        "description": "Atualiza parcialmente os dados de uma UF específica pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID da UF",
+            "example": 1
+          },
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Dados para atualizar parcialmente a UF",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nome": {
+                  "type": "string",
+                  "example": "UF Parcialmente Atualizada"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "UF atualizada",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "UF atualizada com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "UF não encontrada"
+          },
+          "500": {
+            "description": "Erro ao tentar atualizar a UF"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "UF"
+        ],
+        "summary": "Deleta UF por ID",
+        "description": "Deleta uma UF específica pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID da UF",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "UF deletada",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "UF deletada com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "UF não encontrada"
+          },
+          "500": {
+            "description": "Erro ao tentar deletar a UF"
+          }
+        }
+      }
+    },
+    "/cidade": {
+      "get": {
+        "tags": [
+          "Cidade"
+        ],
+        "summary": "Lista todas as cidades",
+        "description": "Retorna a lista completa de cidades cadastradas, incluindo UF",
+        "responses": {
+          "200": {
+            "description": "Sucesso!",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total": {
+                  "type": "number",
+                  "example": 2
+                },
+                "cidades": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "cid_id": {
+                        "type": "number",
+                        "example": 2
+                      },
+                      "cid_nome": {
+                        "type": "string",
+                        "example": "Rio de Janeiro"
+                      },
+                      "uf_id": {
+                        "type": "number",
+                        "example": 2
+                      },
+                      "uf_nome": {
+                        "type": "string",
+                        "example": "Rio de Janeiro"
+                      },
+                      "uf_sigla": {
+                        "type": "string",
+                        "example": "RJ"
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno ao buscar cidades"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Cidade"
+        ],
+        "summary": "Cria uma nova cidade",
+        "description": "Cria uma nova cidade no sistema, informando UF existente",
+        "parameters": [
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Dados para criar uma nova cidade",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nome": {
+                  "type": "string",
+                  "example": "Campinas"
+                },
+                "uf_id": {
+                  "type": "number",
+                  "example": 1
+                }
+              },
+              "required": [
+                "nome",
+                "uf_id"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Cidade criada",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Cidade criada com sucesso!"
+                },
+                "id": {
+                  "type": "number",
+                  "example": 3
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "UF informada não existe"
+          },
+          "500": {
+            "description": "Erro ao tentar criar a cidade"
+          }
+        }
+      }
+    },
+    "/cidade/id/{id}": {
+      "get": {
+        "tags": [
+          "Cidade"
+        ],
+        "summary": "Consulta cidade por ID",
+        "description": "Consulta os detalhes de uma cidade específica pelo ID, incluindo UF",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID da cidade",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso!",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total": {
+                  "type": "number",
+                  "example": 1
+                },
+                "cidade": {
+                  "type": "object",
+                  "properties": {
+                    "cid_id": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "cid_nome": {
+                      "type": "string",
+                      "example": "São Paulo"
+                    },
+                    "uf_id": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "uf_nome": {
+                      "type": "string",
+                      "example": "São Paulo"
+                    },
+                    "uf_sigla": {
+                      "type": "string",
+                      "example": "SP"
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Cidade não encontrada"
+          },
+          "500": {
+            "description": "Erro interno ao tentar fazer a busca"
+          }
+        }
+      }
+    },
+    "/cidade/{id}": {
+      "put": {
+        "tags": [
+          "Cidade"
+        ],
+        "summary": "Atualiza cidade por ID",
+        "description": "Atualiza os detalhes de uma cidade específica pelo ID, incluindo alteração de UF",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID da cidade",
+            "example": 1
+          },
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Dados para atualizar a cidade",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nome": {
+                  "type": "string",
+                  "example": "São Paulo Atualizada"
+                },
+                "uf_id": {
+                  "type": "number",
+                  "example": 1
+                }
+              },
+              "required": [
+                "nome",
+                "uf_id"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cidade atualizada",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Cidade atualizada com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "UF informada não existe"
+          },
+          "404": {
+            "description": "Cidade não encontrada"
+          },
+          "500": {
+            "description": "Erro ao tentar atualizar a cidade"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Cidade"
+        ],
+        "summary": "Atualiza parcialmente cidade por ID",
+        "description": "Atualiza parcialmente os dados de uma cidade específica pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID da cidade",
+            "example": 1
+          },
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Dados para atualizar parcialmente a cidade",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nome": {
+                  "type": "string",
+                  "example": "Cidade Parcial"
+                },
+                "uf_id": {
+                  "type": "number",
+                  "example": 2
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cidade atualizada",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Cidade atualizada com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "UF informada não existe"
+          },
+          "404": {
+            "description": "Cidade não encontrada"
+          },
+          "500": {
+            "description": "Erro ao tentar atualizar a cidade"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Cidade"
+        ],
+        "summary": "Deleta cidade por ID",
+        "description": "Deleta uma cidade específica pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID da cidade",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Cidade deletada",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Cidade deletada com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Cidade não encontrada"
+          },
+          "500": {
+            "description": "Erro ao tentar deletar a cidade"
+          }
+        }
+      }
+    },
+    "/endereco": {
+      "get": {
+        "tags": [
+          "Endereço"
+        ],
+        "summary": "Lista todos os endereços",
+        "description": "Retorna a lista completa de endereços cadastrados, incluindo cidade, UF e cliente",
+        "responses": {
+          "200": {
+            "description": "Sucesso!",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total": {
+                  "type": "number",
+                  "example": 2
+                },
+                "enderecos": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "end_id": {
+                        "type": "number",
+                        "example": 1
+                      },
+                      "cli_id": {
+                        "type": "number",
+                        "example": 1
+                      },
+                      "cli_nome": {
+                        "type": "string",
+                        "example": "Cliente A"
+                      },
+                      "cid_id": {
+                        "type": "number",
+                        "example": 1
+                      },
+                      "cid_nome": {
+                        "type": "string",
+                        "example": "São Paulo"
+                      },
+                      "uf_id": {
+                        "type": "number",
+                        "example": 1
+                      },
+                      "uf_nome": {
+                        "type": "string",
+                        "example": "São Paulo"
+                      },
+                      "uf_sigla": {
+                        "type": "string",
+                        "example": "SP"
+                      },
+                      "cli_bairro": {
+                        "type": "string",
+                        "example": "Centro"
+                      },
+                      "cli_logradouro": {
+                        "type": "string",
+                        "example": "Rua A"
+                      },
+                      "cli_cep": {
+                        "type": "string",
+                        "example": "01000-000"
+                      },
+                      "cli_numero": {
+                        "type": "number",
+                        "example": 123
+                      },
+                      "cli_endereco": {
+                        "type": "string",
+                        "example": "Rua A, 123"
+                      },
+                      "cli_ativo": {
+                        "type": "string",
+                        "example": "S"
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno ao buscar endereços"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Endereço"
+        ],
+        "summary": "Cria um novo endereço",
+        "description": "Cria um novo endereço no sistema, vinculando a um cliente e cidade existentes",
+        "parameters": [
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Dados para criar um novo endereço",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "cli_id": {
+                  "type": "number",
+                  "example": 1
+                },
+                "cid_id": {
+                  "type": "number",
+                  "example": 1
+                },
+                "cli_bairro": {
+                  "type": "string",
+                  "example": "Centro"
+                },
+                "cli_logradouro": {
+                  "type": "string",
+                  "example": "Rua A"
+                },
+                "cli_cep": {
+                  "type": "string",
+                  "example": "01000-000"
+                },
+                "cli_numero": {
+                  "type": "number",
+                  "example": 123
+                },
+                "cli_endereco": {
+                  "type": "string",
+                  "example": "Rua A, 123"
+                },
+                "cli_ativo": {
+                  "type": "string",
+                  "example": "S"
+                }
+              },
+              "required": [
+                "cli_id",
+                "cid_id",
+                "cli_bairro",
+                "cli_logradouro",
+                "cli_cep",
+                "cli_numero",
+                "cli_endereco",
+                "cli_ativo"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Endereço criado",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Endereço criado com sucesso!"
+                },
+                "id": {
+                  "type": "number",
+                  "example": 1
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "Cliente ou cidade informada não existe"
+          },
+          "500": {
+            "description": "Erro ao tentar criar o endereço"
+          }
+        }
+      }
+    },
+    "/endereco/id/{id}": {
+      "get": {
+        "tags": [
+          "Endereço"
+        ],
+        "summary": "Consulta endereço por ID",
+        "description": "Consulta os detalhes de um endereço específico pelo ID, incluindo cidade, UF e cliente",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID do endereço",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso!",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total": {
+                  "type": "number",
+                  "example": 1
+                },
+                "endereco": {
+                  "type": "object",
+                  "properties": {
+                    "end_id": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "cli_id": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "cli_nome": {
+                      "type": "string",
+                      "example": "Cliente A"
+                    },
+                    "cid_id": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "cid_nome": {
+                      "type": "string",
+                      "example": "São Paulo"
+                    },
+                    "uf_id": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "uf_nome": {
+                      "type": "string",
+                      "example": "São Paulo"
+                    },
+                    "uf_sigla": {
+                      "type": "string",
+                      "example": "SP"
+                    },
+                    "cli_bairro": {
+                      "type": "string",
+                      "example": "Centro"
+                    },
+                    "cli_logradouro": {
+                      "type": "string",
+                      "example": "Rua A"
+                    },
+                    "cli_cep": {
+                      "type": "string",
+                      "example": "01000-000"
+                    },
+                    "cli_numero": {
+                      "type": "number",
+                      "example": 123
+                    },
+                    "cli_endereco": {
+                      "type": "string",
+                      "example": "Rua A, 123"
+                    },
+                    "cli_ativo": {
+                      "type": "string",
+                      "example": "S"
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Endereço não encontrado"
+          },
+          "500": {
+            "description": "Erro interno ao tentar fazer a busca"
+          }
+        }
+      }
+    },
+    "/endereco/{id}": {
+      "put": {
+        "tags": [
+          "Endereço"
+        ],
+        "summary": "Atualiza endereço por ID",
+        "description": "Atualiza os detalhes de um endereço específico pelo ID, incluindo cliente e cidade",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID do endereço",
+            "example": 1
+          },
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Dados para atualizar o endereço",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "cli_id": {
+                  "type": "number",
+                  "example": 1
+                },
+                "cid_id": {
+                  "type": "number",
+                  "example": 1
+                },
+                "cli_bairro": {
+                  "type": "string",
+                  "example": "Centro"
+                },
+                "cli_logradouro": {
+                  "type": "string",
+                  "example": "Rua A"
+                },
+                "cli_cep": {
+                  "type": "string",
+                  "example": "01000-000"
+                },
+                "cli_numero": {
+                  "type": "number",
+                  "example": 123
+                },
+                "cli_endereco": {
+                  "type": "string",
+                  "example": "Rua A, 123"
+                },
+                "cli_ativo": {
+                  "type": "string",
+                  "example": "S"
+                }
+              },
+              "required": [
+                "cli_id",
+                "cid_id",
+                "cli_bairro",
+                "cli_logradouro",
+                "cli_cep",
+                "cli_numero",
+                "cli_endereco",
+                "cli_ativo"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Endereço atualizado",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Endereço atualizado com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "Cliente ou cidade informada não existe"
+          },
+          "404": {
+            "description": "Endereço não encontrado"
+          },
+          "500": {
+            "description": "Erro ao tentar atualizar o endereço"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Endereço"
+        ],
+        "summary": "Atualiza parcialmente endereço por ID",
+        "description": "Atualiza parcialmente os dados de um endereço específico pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID do endereço",
+            "example": 1
+          },
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Dados para atualizar parcialmente o endereço",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "cli_bairro": {
+                  "type": "string",
+                  "example": "Bairro Novo"
+                },
+                "cli_ativo": {
+                  "type": "string",
+                  "example": "N"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Endereço atualizado",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Endereço atualizado com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "Cliente ou cidade informada não existe"
+          },
+          "404": {
+            "description": "Endereço não encontrado"
+          },
+          "500": {
+            "description": "Erro ao tentar atualizar o endereço"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Endereço"
+        ],
+        "summary": "Deleta endereço por ID",
+        "description": "Deleta um endereço específico pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID do endereço",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Endereço deletado",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Endereço deletado com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Endereço não encontrado"
+          },
+          "500": {
+            "description": "Erro ao tentar deletar o endereço"
+          }
+        }
+      }
+    },
+    "/status": {
+      "get": {
+        "tags": [
+          "Status"
+        ],
+        "summary": "Lista todos os status",
+        "description": "Retorna a lista completa de status cadastrados",
+        "responses": {
+          "200": {
+            "description": "Sucesso!",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total": {
+                  "type": "number",
+                  "example": 2
+                },
+                "status": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "stt_id": {
+                        "type": "number",
+                        "example": 2
+                      },
+                      "stt_nome": {
+                        "type": "string",
+                        "example": "Inativo"
+                      },
+                      "stt_cor": {
+                        "type": "string",
+                        "example": "vermelho"
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno ao buscar status"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Status"
+        ],
+        "summary": "Cria um novo status",
+        "description": "Cria um novo status no sistema",
+        "parameters": [
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Dados para criar um novo status",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nome": {
+                  "type": "string",
+                  "example": "Ativo"
+                },
+                "cor": {
+                  "type": "string",
+                  "example": "verde"
+                }
+              },
+              "required": [
+                "nome",
+                "cor"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Status criado",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Status criado com sucesso!"
+                },
+                "id": {
+                  "type": "number",
+                  "example": 3
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "500": {
+            "description": "Erro ao tentar criar o status"
+          }
+        }
+      }
+    },
+    "/status/id/{id}": {
+      "get": {
+        "tags": [
+          "Status"
+        ],
+        "summary": "Consulta status por ID",
+        "description": "Consulta os detalhes de um status específico pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID do status",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso!",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total": {
+                  "type": "number",
+                  "example": 1
+                },
+                "status": {
+                  "type": "object",
+                  "properties": {
+                    "stt_id": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "stt_nome": {
+                      "type": "string",
+                      "example": "Ativo"
+                    },
+                    "stt_cor": {
+                      "type": "string",
+                      "example": "verde"
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Status não encontrado"
+          },
+          "500": {
+            "description": "Erro interno ao tentar fazer a busca"
+          }
+        }
+      }
+    },
+    "/status/{id}": {
+      "put": {
+        "tags": [
+          "Status"
+        ],
+        "summary": "Atualiza status por ID",
+        "description": "Atualiza os detalhes de um status específico pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID do status",
+            "example": 1
+          },
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Dados para atualizar o status",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nome": {
+                  "type": "string",
+                  "example": "Inativo"
+                },
+                "cor": {
+                  "type": "string",
+                  "example": "vermelho"
+                }
+              },
+              "required": [
+                "nome",
+                "cor"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status atualizado",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Status atualizado com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Status não encontrado"
+          },
+          "500": {
+            "description": "Erro ao tentar atualizar o status"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Status"
+        ],
+        "summary": "Atualiza parcialmente status por ID",
+        "description": "Atualiza parcialmente os dados de um status específico pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID do status",
+            "example": 1
+          },
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Dados para atualizar parcialmente o status",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nome": {
+                  "type": "string",
+                  "example": "Ativo"
+                },
+                "cor": {
+                  "type": "string",
+                  "example": "verde"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status atualizado",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Status atualizado com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Status não encontrado"
+          },
+          "500": {
+            "description": "Erro ao tentar atualizar o status"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Status"
+        ],
+        "summary": "Deleta status por ID",
+        "description": "Deleta um status específico pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID do status",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Status deletado",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Status deletado com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Status não encontrado"
+          },
+          "500": {
+            "description": "Erro ao tentar deletar o status"
+          }
+        }
+      }
+    }
+  }
+}

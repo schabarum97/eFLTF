@@ -1,0 +1,32 @@
+version: "3.9"
+services:
+  tcc-db:
+    build: 
+      context: ./db
+      dockerfile: Dockerfile
+    container_name: tcc-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: efltf
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  tcc-back:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tcc-back
+    ports:
+      - "3000:3000"
+    depends_on:
+      - tcc-db
+    working_dir: /home/node/efltf
+    volumes:
+      - .:/home/node/efltf
+
+volumes:
+  pgdata:
