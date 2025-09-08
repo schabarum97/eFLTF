@@ -12,12 +12,9 @@ const sql_getById = `
     e.cli_endereco  AS endereco,
     e.cli_ativo     AS ativo,
     c.cid_nome      AS cidade_nome,
-    u.uf_nome       AS uf_nome,
-    u.uf_sigla      AS uf_sigla,
     cl.cli_nome     AS cliente_nome
   FROM t_endercli e
   JOIN t_cidade  c  ON e.cid_id = c.cid_id
-  JOIN t_uf      u  ON c.uf_id  = u.uf_id
   JOIN t_cliente cl ON e.cli_id = cl.cli_id
   WHERE e.end_id = $1
 `
@@ -49,12 +46,9 @@ const sql_getAll = `
     e.cli_endereco  AS endereco,
     e.cli_ativo     AS ativo,
     c.cid_nome      AS cidade_nome,
-    u.uf_nome       AS uf_nome,
-    u.uf_sigla      AS uf_sigla,
     cl.cli_nome     AS cliente_nome
   FROM t_endercli e
   JOIN t_cidade  c  ON e.cid_id = c.cid_id
-  JOIN t_uf      u  ON c.uf_id  = u.uf_id
   JOIN t_cliente cl ON e.cli_id = cl.cli_id
 `
 
