@@ -1,16 +1,42 @@
 const db = require('../configs/pg')
 
+const baseSelect = `
+    SELECT
+      cli_id   AS id,
+      cli_cnpj AS cnpj,
+      cli_nome AS nome,
+      cli_ddi  AS ddi,
+      cli_ddd  AS ddd,
+      cli_fone AS fone
+    FROM t_cliente`;
+
 const sql_getById = `
-  SELECT
-    cli_id   AS id,
-    cli_cnpj AS cnpj,
-    cli_nome AS nome,
-    cli_ddi  AS ddi,
-    cli_ddd  AS ddd,
-    cli_fone AS fone
-  FROM t_cliente
-  WHERE cli_id = $1
-`
+  ${baseSelect}
+  WHERE t_cliente.cli_id = $1`;
+
+const sql_getAll = `
+  ${baseSelect}
+  ORDER BY t_cliente.cli_id DESC`;
+
+const sql_post = `
+  INSERT INTO t_cliente (cli_cnpj, cli_nome, cli_ddi, cli_ddd, cli_fone)
+  VALUES ($1, $2, $3, $4, $5)
+  RETURNING cli_id AS id`;
+
+const sql_put = `
+  UPDATE t_cliente
+     SET cli_cnpj = $2,
+         cli_nome = $3,
+         cli_ddi  = $4,
+         cli_ddd  = $5,
+         cli_fone = $6
+   WHERE cli_id   = $1
+RETURNING cli_id AS id`;
+
+const sql_delete = `
+  DELETE FROM t_cliente
+   WHERE cli_id = $1
+RETURNING cli_id AS id`;
 
 const getClienteById = async (id) => {
   try {
@@ -27,17 +53,6 @@ const getClienteById = async (id) => {
   }
 }
 
-const sql_getAll = `
-  SELECT
-    cli_id   AS id,
-    cli_cnpj AS cnpj,
-    cli_nome AS nome,
-    cli_ddi  AS ddi,
-    cli_ddd  AS ddd,
-    cli_fone AS fone
-  FROM t_cliente
-`
-
 const getClientes = async () => {
   try {
     const result = await db.query(sql_getAll)
@@ -46,12 +61,6 @@ const getClientes = async () => {
     throw { status: 500, message: 'Erro ao buscar Clientes ' + err.message }
   }
 }
-
-const sql_post = `
-  INSERT INTO t_cliente (cli_cnpj, cli_nome, cli_ddi, cli_ddd, cli_fone)
-  VALUES ($1, $2, $3, $4, $5)
-  RETURNING cli_id AS id
-`
 
 const postCliente = async (params) => {
   try {
@@ -62,17 +71,6 @@ const postCliente = async (params) => {
     throw { status: 500, message: 'Erro ao tentar criar Cliente ' + err.message }
   }
 }
-
-const sql_put = `
-  UPDATE t_cliente
-     SET cli_cnpj = $2,
-         cli_nome = $3,
-         cli_ddi  = $4,
-         cli_ddd  = $5,
-         cli_fone = $6
-   WHERE cli_id   = $1
-RETURNING cli_id AS id
-`
 
 const putCliente = async (params) => {
   try {
@@ -141,12 +139,6 @@ const patchCliente = async (params) => {
     throw { status: 500, message: err.message }
   }
 }
-
-const sql_delete = `
-  DELETE FROM t_cliente
-   WHERE cli_id = $1
-RETURNING cli_id AS id
-`
 
 const deleteCliente = async (id) => {
   try {

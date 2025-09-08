@@ -1,12 +1,37 @@
 const db = require('../configs/pg');
 
+const baseSelect = `
+  SELECT 
+    stt_id   AS id,
+    stt_nome AS nome,
+    stt_cor  AS cor
+  FROM t_status`;
+
 const sql_getById = `
-    SELECT 
-        stt_id   AS id,
-        stt_nome AS nome,
-        stt_cor  AS cor
-      FROM t_status
-     WHERE stt_id = $1`;
+  ${baseSelect}
+  WHERE t_status.stt_id = $1`;
+
+const sql_getAll = `
+  ${baseSelect}
+  ORDER BY t_status.stt_id DESC`;
+ 
+
+const sql_post = `
+    INSERT INTO t_status (stt_nome, stt_cor)
+    VALUES ($1, $2)
+    RETURNING stt_id AS id`;
+
+const sql_put = `
+    UPDATE t_status
+       SET stt_nome = $2,
+           stt_cor  = $3
+     WHERE stt_id = $1
+ RETURNING stt_id AS id`;
+
+const sql_delete = `
+    DELETE FROM t_status
+     WHERE stt_id = $1
+ RETURNING stt_id AS id`;
 
 const getStatusById = async (id) => {
   try {
@@ -23,13 +48,6 @@ const getStatusById = async (id) => {
   }
 };
 
-const sql_getAll = `
-    SELECT 
-        stt_id   AS id,
-        stt_nome AS nome,
-        stt_cor  AS cor
-      FROM t_status`;
-
 const getStatus = async () => {
   try {
     const result = await db.query(sql_getAll);
@@ -38,11 +56,6 @@ const getStatus = async () => {
     throw { status: 500, message: 'Erro ao buscar Status ' + err.message };
   }
 };
-
-const sql_post = `
-    INSERT INTO t_status (stt_nome, stt_cor)
-    VALUES ($1, $2)
-    RETURNING stt_id AS id`;
 
 const postStatus = async (params) => {
   try {
@@ -53,13 +66,6 @@ const postStatus = async (params) => {
     throw { status: 500, message: 'Erro ao tentar criar Status ' + err.message };
   }
 };
-
-const sql_put = `
-    UPDATE t_status
-       SET stt_nome = $2,
-           stt_cor  = $3
-     WHERE stt_id = $1
- RETURNING stt_id AS id`;
 
 const putStatus = async (params) => {
   try {
@@ -113,11 +119,6 @@ const patchStatus = async (params) => {
     throw { status: 500, message: err.message };
   }
 };
-
-const sql_delete = `
-    DELETE FROM t_status
-     WHERE stt_id = $1
- RETURNING stt_id AS id`;
 
 const deleteStatus = async (id) => {
   try {

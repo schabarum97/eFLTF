@@ -28,18 +28,38 @@ const baseSelect = `
   JOIN t_cidade    c  ON e.cid_id = c.cid_id
   JOIN t_uf        uf ON c.uf_id  = uf.uf_id
   JOIN t_status    st ON o.stt_id = st.stt_id
-  LEFT JOIN t_usuario us ON o.ord_responsavel = us.usu_id
-`
+  LEFT JOIN t_usuario us ON o.ord_responsavel = us.usu_id`;
 
 const sql_getById = `
   ${baseSelect}
-  WHERE o.ord_id = $1
-`
+  WHERE o.ord_id = $1`;
 
 const sql_getAll = `
   ${baseSelect}
-  ORDER BY o.ord_id DESC
-`
+  ORDER BY o.ord_id ASC`;
+
+const sql_post = `
+  INSERT INTO t_ordem (
+    cli_id, end_id, stt_id, ord_observacao, ord_data, ord_hora, ord_responsavel) 
+  VALUES ($1, $2, $3, $4, $5, $6, $7)
+  RETURNING ord_id AS id`;
+
+const sql_put = `
+  UPDATE t_ordem
+     SET cli_id = $2,
+         end_id = $3,
+         stt_id = $4,
+         ord_observacao = $5,
+         ord_data = $6,
+         ord_hora = $7,
+         ord_responsavel = $8
+   WHERE ord_id = $1
+RETURNING ord_id AS id`;
+
+const sql_delete = `
+  DELETE FROM t_ordem
+   WHERE ord_id = $1
+RETURNING ord_id AS id`;
 
 const getOrdemById = async (id) => {
   try {
@@ -65,15 +85,6 @@ const getOrdens = async () => {
   }
 }
 
-const sql_post = `
-  INSERT INTO t_ordem (
-    cli_id, end_id, stt_id, ord_observacao, ord_data, ord_hora, ord_responsavel
-  ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7
-  )
-  RETURNING ord_id AS id
-`
-
 const postOrdem = async (params) => {
   try {
     const {
@@ -81,8 +92,8 @@ const postOrdem = async (params) => {
       end_id,
       stt_id,
       observacao = null,
-      data = null,       // Date (YYYY-MM-DD)
-      hora = null,       // VARCHAR(10)
+      data = null,
+      hora = null,
       responsavel_id = null
     } = params
 
@@ -127,19 +138,6 @@ const postOrdem = async (params) => {
     throw { status: 500, message: 'Erro ao tentar criar Ordem ' + err.message }
   }
 }
-
-const sql_put = `
-  UPDATE t_ordem
-     SET cli_id = $2,
-         end_id = $3,
-         stt_id = $4,
-         ord_observacao = $5,
-         ord_data = $6,
-         ord_hora = $7,
-         ord_responsavel = $8
-   WHERE ord_id = $1
-RETURNING ord_id AS id
-`
 
 const putOrdem = async (params) => {
   try {
@@ -271,12 +269,6 @@ const patchOrdem = async (params) => {
     throw { status: 500, message: err.message }
   }
 }
-
-const sql_delete = `
-  DELETE FROM t_ordem
-   WHERE ord_id = $1
-RETURNING ord_id AS id
-`
 
 const deleteOrdem = async (id) => {
   try {

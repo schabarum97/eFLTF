@@ -1,6 +1,6 @@
 const db = require('../configs/pg')
 
-const sql_getById = `
+const baseSelect = `
   SELECT
     e.end_id        AS id,
     e.cli_id        AS cli_id,
@@ -15,9 +15,40 @@ const sql_getById = `
     cl.cli_nome     AS cliente_nome
   FROM t_endercli e
   JOIN t_cidade  c  ON e.cid_id = c.cid_id
-  JOIN t_cliente cl ON e.cli_id = cl.cli_id
-  WHERE e.end_id = $1
-`
+  JOIN t_cliente cl ON e.cli_id = cl.cli_id`;
+
+const sql_getById = `
+  ${baseSelect}
+  WHERE e.end_id = $1`;
+
+const sql_getAll = `
+  ${baseSelect}
+  ORDER BY e.end_id DESC`;
+
+const sql_post = `
+  INSERT INTO t_endercli
+    (cli_id, cid_id, cli_bairro, cli_logradouro, cli_cep, cli_numero, cli_endereco, cli_ativo)
+  VALUES
+    ($1, $2, $3, $4, $5, $6, $7, COALESCE($8,'S'))
+  RETURNING end_id AS id`;
+
+const sql_put = `
+  UPDATE t_endercli
+     SET cli_id        = $2,
+         cid_id        = $3,
+         cli_bairro    = $4,
+         cli_logradouro= $5,
+         cli_cep       = $6,
+         cli_numero    = $7,
+         cli_endereco  = $8,
+         cli_ativo     = COALESCE($9,'S')
+   WHERE end_id        = $1
+RETURNING end_id AS id`;
+
+const sql_delete = `
+  DELETE FROM t_endercli
+   WHERE end_id = $1
+RETURNING end_id AS id`;
 
 const getEnderecoById = async (id) => {
   try {
@@ -34,24 +65,6 @@ const getEnderecoById = async (id) => {
   }
 }
 
-const sql_getAll = `
-  SELECT
-    e.end_id        AS id,
-    e.cli_id        AS cli_id,
-    e.cid_id        AS cid_id,
-    e.cli_bairro    AS bairro,
-    e.cli_logradouro AS logradouro,
-    e.cli_cep       AS cep,
-    e.cli_numero    AS numero,
-    e.cli_endereco  AS endereco,
-    e.cli_ativo     AS ativo,
-    c.cid_nome      AS cidade_nome,
-    cl.cli_nome     AS cliente_nome
-  FROM t_endercli e
-  JOIN t_cidade  c  ON e.cid_id = c.cid_id
-  JOIN t_cliente cl ON e.cli_id = cl.cli_id
-`
-
 const getEnderecos = async () => {
   try {
     const result = await db.query(sql_getAll)
@@ -60,14 +73,6 @@ const getEnderecos = async () => {
     throw { status: 500, message: 'Erro ao buscar Endereços ' + err.message }
   }
 }
-
-const sql_post = `
-  INSERT INTO t_endercli
-    (cli_id, cid_id, cli_bairro, cli_logradouro, cli_cep, cli_numero, cli_endereco, cli_ativo)
-  VALUES
-    ($1, $2, $3, $4, $5, $6, $7, COALESCE($8,'S'))
-  RETURNING end_id AS id
-`
 
 const postEndereco = async (params) => {
   try {
@@ -89,20 +94,6 @@ const postEndereco = async (params) => {
     throw { status: 500, message: 'Erro ao tentar criar Endereço ' + err.message }
   }
 }
-
-const sql_put = `
-  UPDATE t_endercli
-     SET cli_id        = $2,
-         cid_id        = $3,
-         cli_bairro    = $4,
-         cli_logradouro= $5,
-         cli_cep       = $6,
-         cli_numero    = $7,
-         cli_endereco  = $8,
-         cli_ativo     = COALESCE($9,'S')
-   WHERE end_id        = $1
-RETURNING end_id AS id
-`
 
 const putEndereco = async (params) => {
   try {
@@ -172,12 +163,6 @@ const patchEndereco = async (params) => {
     throw { status: 500, message: err.message }
   }
 }
-
-const sql_delete = `
-  DELETE FROM t_endercli
-   WHERE end_id = $1
-RETURNING end_id AS id
-`
 
 const deleteEndereco = async (id) => {
   try {

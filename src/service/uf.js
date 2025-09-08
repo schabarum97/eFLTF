@@ -1,13 +1,37 @@
 const db = require('../configs/pg');
 
-const sql_getById = `
+const baseSelect = `
   SELECT 
     uf_id   AS id,
     uf_nome AS nome,
     uf_sigla AS sigla
-  FROM t_uf
-  WHERE uf_id = $1
-`;
+  FROM t_uf`;
+
+const sql_getById = `
+  ${baseSelect}
+  WHERE t_uf.uf_id = $1`;
+
+const sql_getAll = `
+  ${baseSelect}
+  ORDER BY t_uf.uf_id DESC`;
+
+const sql_post = `
+  INSERT INTO t_uf (uf_nome, uf_sigla)
+  VALUES ($1, $2)
+  RETURNING uf_id AS id`;
+
+const sql_put = `
+  UPDATE t_uf
+     SET uf_nome = $2,
+         uf_sigla = $3
+   WHERE uf_id = $1
+RETURNING uf_id AS id`;
+
+const sql_delete = `
+  DELETE FROM t_uf
+   WHERE uf_id = $1
+RETURNING uf_id AS id `;
+
 
 const getUfById = async (id) => {
   try {
@@ -24,15 +48,6 @@ const getUfById = async (id) => {
   }
 };
 
-const sql_getAll = `
-  SELECT 
-    uf_id   AS id,
-    uf_nome AS nome,
-    uf_sigla AS sigla
-  FROM t_uf
-  ORDER BY uf_nome
-`;
-
 const getUfs = async () => {
   try {
     const result = await db.query(sql_getAll);
@@ -41,12 +56,6 @@ const getUfs = async () => {
     throw { status: 500, message: 'Erro ao buscar UFs ' + err.message };
   }
 };
-
-const sql_post = `
-  INSERT INTO t_uf (uf_nome, uf_sigla)
-  VALUES ($1, $2)
-  RETURNING uf_id AS id
-`;
 
 const postUf = async (params) => {
   try {
@@ -59,21 +68,10 @@ const postUf = async (params) => {
     const result = await db.query(sql_post, [nome, sigla]);
     return { mensagem: 'UF criada com sucesso!', id: result.rows[0].id };
   } catch (err) {
-    // 23505 = unique_violation (caso exista unique em sigla)
-    if (err.code === '23505') {
-      throw { status: 409, message: 'UF já cadastrada (violação de unicidade)' };
-    }
-    throw { status: err.status || 500, message: 'Erro ao tentar criar UF ' + (err.message || '') };
+    if (err.status && err.message) throw err
+    throw { status: 500, message: 'Erro ao tentar criar UF ' + err.message }
   }
 };
-
-const sql_put = `
-  UPDATE t_uf
-     SET uf_nome = $2,
-         uf_sigla = $3
-   WHERE uf_id = $1
-RETURNING uf_id AS id
-`;
 
 const putUf = async (params) => {
   try {
@@ -89,7 +87,8 @@ const putUf = async (params) => {
     }
     return { mensagem: 'UF atualizada com sucesso!' };
   } catch (err) {
-    throw { status: err.status || 500, message: err.message || 'Erro ao atualizar UF' };
+    if (err.status && err.message) throw err
+    throw { status: 500, message: err.message }
   }
 };
 
@@ -99,7 +98,6 @@ const patchUf = async (params) => {
     if (!id) {
       throw { status: 400, message: 'Campo obrigatório: id' };
     }
-
     const fields = [];
     const binds = [id];
     let idx = 1;
@@ -137,12 +135,6 @@ const patchUf = async (params) => {
     throw { status: err.status || 500, message: err.message || 'Erro ao atualizar UF' };
   }
 };
-
-const sql_delete = `
-  DELETE FROM t_uf
-   WHERE uf_id = $1
-RETURNING uf_id AS id
-`;
 
 const deleteUf = async (id) => {
   try {
