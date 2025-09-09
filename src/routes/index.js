@@ -6,6 +6,9 @@ const Status = require('./status');
 const Ordem = require('./ordem');
 const FormaPag = require('./formapag');
 const OrdemPag = require('./ordempag');
+const Dash = require('./dash');
+const Responsavel = require('./responsavel');
+const Veiculo = require('./veiculo');
 
 module.exports = (app) => {
     Cliente(app),
@@ -15,5 +18,8 @@ module.exports = (app) => {
     Status(app),
     Ordem(app),
     FormaPag(app),
-    OrdemPag(app)
+    OrdemPag(app), 
+    Dash(app),
+    Responsavel(app),
+    Veiculo(app)
 }

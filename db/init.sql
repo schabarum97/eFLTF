@@ -1,9 +1,15 @@
-CREATE TABLE IF NOT EXISTS T_USUARIO (
+CREATE TABLE IF NOT EXISTS T_VEICULO (
+    VEI_ID      BIGSERIAL  PRIMARY KEY,
+    VEI_PLACA   VARCHAR(10),
+    VEI_MODELO  VARCHAR(100),
+    VEI_MARCA   VARCHAR(100),
+    VEI_ANO     INTEGER,
+    VEI_ATIVO   VARCHAR(1) DEFAULT 'S'
+);
+
+CREATE TABLE IF NOT EXISTS T_USURESPONSAVEL (
     USU_ID       BIGSERIAL  PRIMARY KEY,
-    USU_LOGIN    VARCHAR(100),
-    USU_NOME     VARCHAR(100),
-    USU_EMAIL    VARCHAR(100),
-    USU_SENHA    VARCHAR(1000)
+    USU_NOME     VARCHAR(100)
 );
 
 CREATE TABLE IF NOT EXISTS T_UF (
@@ -62,15 +68,18 @@ CREATE TABLE IF NOT EXISTS T_ORDEM (
     ORD_DATA        DATE,
     ORD_HORA        VARCHAR(10),
     ORD_RESPONSAVEL BIGINT,
-    
+    VEI_ID          BIGINT,
+
     CONSTRAINT FK_ORDEM_CLIENTE 
         FOREIGN KEY (CLI_ID) REFERENCES T_CLIENTE (CLI_ID),
     CONSTRAINT FK_ORDEM_ENDERCLI 
         FOREIGN KEY (END_ID) REFERENCES T_ENDERCLI (END_ID),
-    CONSTRAINT FK_ORDEM_USUARIO 
-        FOREIGN KEY (ORD_RESPONSAVEL) REFERENCES T_USUARIO (USU_ID),
+    CONSTRAINT FK_ORDEM_RESPONSAVEL 
+        FOREIGN KEY (ORD_RESPONSAVEL) REFERENCES T_USURESPONSAVEL (USU_ID),
     CONSTRAINT FK_ORDEM_STATUS
-        FOREIGN KEY (STT_ID) REFERENCES T_STATUS (STT_ID)    
+        FOREIGN KEY (STT_ID) REFERENCES T_STATUS (STT_ID),    
+    CONSTRAINT FK_ORDEM_VEICULO
+        FOREIGN KEY (VEI_ID) REFERENCES T_VEICULO (VEI_ID)   
 );
 
 CREATE TABLE IF NOT EXISTS T_FORMAPAG (
@@ -95,6 +104,20 @@ CREATE TABLE IF NOT EXISTS T_ORDPAG (
         FOREIGN KEY (FPG_ID) REFERENCES T_FORMAPAG (FPG_ID)
 );
 
+INSERT INTO T_VEICULO (VEI_PLACA, VEI_MODELO, VEI_MARCA, VEI_ANO, VEI_ATIVO) VALUES
+('MBZ5H21', 'L-1620',                 'Mercedes-Benz', 2012, 'S'),
+('FOR2C90', 'Cargo 2429',             'Ford',          2017, 'S'),
+('VLV9K33', 'FH 540 6x4',             'Volvo',         2022, 'S'),
+('SCN7J18', 'R 440 6x2',              'Scania',        2018, 'S'), 
+('VWG3M84', 'Constellation 24.280',   'Volkswagen',    2021, 'S'); 
+
+INSERT INTO T_USURESPONSAVEL (USU_NOME) VALUES
+('Rafael Costa'),
+('Mariana Rocha'),
+('Gabriel Nogueira'),
+('Leticia Barbosa'),
+('Paulo Azevedo');
+
 INSERT INTO T_FORMAPAG (FPG_NOME, FPG_PARCELADO) VALUES 
 ('DINHEIRO', 'N'), 
 ('CARTÃO DÉBITO', 'N'), 
@@ -106,7 +129,8 @@ INSERT INTO T_STATUS (STT_NOME, STT_COR) VALUES
 ('ABERTA', 'blue'), 
 ('EM ANDAMENTO', 'orange'), 
 ('FINALIZADA', 'green'), 
-('CANCELADA', 'red');
+('CANCELADA', 'red'), 
+('AGUARDANDO APROVAÇÃO', 'gray');
 
 INSERT INTO T_UF (UF_NOME, UF_SIGLA) VALUES 
 ('Acre', 'AC'),
@@ -221,32 +245,112 @@ VALUES
 (15, (SELECT CID_ID FROM T_CIDADE WHERE CID_NOME = 'São Miguel do Oeste'),
    'Centro', 'Rua Marcílio Dias', '89900-000', 520, 'Rua Marcílio Dias, 520');
 
-WITH base AS (
+SELECT setseed(0.42);
+
+WITH bounds AS (
+  SELECT (CURRENT_DATE - INTERVAL '22 day')::date AS start_day,
+         45::int AS ndays
+),
+-- todos os dias da janela
+days AS (
+  SELECT generate_series(start_day, start_day + (ndays - 1), '1 day')::date AS dia
+  FROM bounds
+),
+-- só dias úteis + sábado (exclui domingo)
+valid_days AS (
+  SELECT dia
+  FROM days
+  WHERE EXTRACT(DOW FROM dia)::int <> 0
+),
+-- indexa os dias válidos (1..N)
+idx_days AS (
+  SELECT row_number() OVER (ORDER BY dia) AS idx, dia
+  FROM valid_days
+),
+cnt  AS (SELECT COUNT(*)::int AS n FROM idx_days),
+
+-- usuários (round-robin)
+u AS (
+  SELECT row_number() OVER (ORDER BY usu_id) AS idx, usu_id
+  FROM t_usuresponsavel
+),
+cntu AS (SELECT COUNT(*)::int AS n FROM u),
+
+-- veículos ativos (round-robin)
+v AS (
+  SELECT row_number() OVER (ORDER BY vei_id) AS idx, vei_id
+  FROM t_veiculo
+  WHERE COALESCE(vei_ativo, 'S') = 'S'
+),
+cntv AS (SELECT COUNT(*)::int AS n FROM v),
+
+-- quantidade de OS
+seq AS (SELECT generate_series(1, 240) AS n),
+
+-- base distribuída
+base AS (
   SELECT
-    n AS seq,
-    ((n - 1) % 15) + 1 AS cli_id,  -- gira entre 1..15
-    (ARRAY['ABERTA','EM ANDAMENTO','FINALIZADA','CANCELADA'])[((n - 1) % 4) + 1] AS stt_nome,
-    DATE '2025-08-18' + ((n - 1) / 5) AS ord_data, -- 5 ordens por dia: 18..31/08
-    (ARRAY['08:10','09:20','10:40','13:00','15:45'])[((n - 1) % 5) + 1] AS ord_hora,
+    s.n AS seq,
+    ((s.n - 1) % 15) + 1 AS cli_id,
+    d.dia AS ord_data,
+
+    -- hora: sábado (DOW=6) 7..11; demais dias 7..19
+    CASE
+      WHEN EXTRACT(DOW FROM d.dia)::int = 6 THEN
+        lpad((7 + floor(random() * 5))::int::text, 2, '0') || ':' ||
+        lpad((ARRAY[0,10,15,20,30,40,45,50])[ceil(random()*8)]::int::text, 2, '0')
+      ELSE
+        lpad((7 + floor(random() * 13))::int::text, 2, '0') || ':' ||
+        lpad((ARRAY[0,10,15,20,30,40,45,50])[ceil(random()*8)]::int::text, 2, '0')
+    END AS ord_hora,
+
+    -- distribuição de status (~40/25/20/10/5)
+    CASE
+      WHEN random() < 0.40 THEN 'ABERTA'
+      WHEN random() < 0.65 THEN 'EM ANDAMENTO'
+      WHEN random() < 0.85 THEN 'FINALIZADA'
+      WHEN random() < 0.95 THEN 'AGUARDANDO APROVAÇÃO'
+      ELSE 'CANCELADA'
+    END AS stt_nome,
+
     (ARRAY[
-      'Limpeza de fossa - volume 1.5 m3 - tampa 50 cm - distancia 15 m - mangote 2 pol - EPI ok - descarte em ETE.',
-      'Limpeza de fossa - hidrojato leve - lodo espesso - previsao 60 min.',
-      'Limpeza de fossa - finalizado - lavagem do poco - entorno limpo.',
-      'Limpeza de fossa - cancelada por acesso bloqueado - reagendar.',
-      'Limpeza de fossa - agendado - revisar vedacao apos servico.'
-    ])[((n - 1) % 5) + 1] AS ord_observacao
-  FROM generate_series(1, 70) AS t(n)
+      'Limpeza de fossa - hidrojato - previsão 60min.',
+      'Coleta e transporte de efluente - ETE municipal.',
+      'Desentupimento - risco biológico - EPI completo.',
+      'Inspeção preventiva - sem não-conformidades.',
+      'Reagendar visita - acesso bloqueado ao pátio.'
+    ])[ceil(random()*5)] AS ord_observacao,
+
+    u.usu_id,                              -- responsável
+    v.vei_id                               -- veículo
+  FROM seq s
+  CROSS JOIN cnt  c
+  JOIN idx_days d
+    ON d.idx = ((s.n - 1) % c.n) + 1
+  CROSS JOIN cntu cu
+  JOIN u
+    ON u.idx = ((s.n - 1) % cu.n) + 1
+  CROSS JOIN cntv cv
+  JOIN v
+    ON v.idx = ((s.n - 1) % cv.n) + 1
 )
-INSERT INTO T_ORDEM (CLI_ID, END_ID, STT_ID, ORD_OBSERVACAO, ORD_DATA, ORD_HORA)
+
+INSERT INTO t_ordem (cli_id, end_id, stt_id, ord_responsavel, vei_id, ord_observacao, ord_data, ord_hora)
 SELECT
   b.cli_id,
-  (SELECT end_id FROM T_ENDERCLI e WHERE e.cli_id = b.cli_id LIMIT 1) AS end_id,
+  (SELECT e.end_id
+     FROM t_endercli e
+    WHERE e.cli_id = b.cli_id
+    ORDER BY e.end_id
+    LIMIT 1),
   s.stt_id,
+  b.usu_id,
+  b.vei_id,
   b.ord_observacao,
   b.ord_data,
   b.ord_hora
 FROM base b
-JOIN T_STATUS s ON s.stt_nome = b.stt_nome;
+JOIN t_status s ON s.stt_nome = b.stt_nome;
 
 WITH ords AS (
   SELECT
@@ -254,18 +358,22 @@ WITH ords AS (
     o.ord_data,
     e.cid_id,
     c.cid_deslocamento,
-    ROW_NUMBER() OVER (ORDER BY o.ord_id) AS seq
+    s.stt_nome
   FROM t_ordem o
   JOIN t_endercli e ON e.end_id = o.end_id
   JOIN t_cidade   c ON c.cid_id = e.cid_id
-  WHERE NOT EXISTS (
-    SELECT 1 FROM t_ordpag op WHERE op.ord_id = o.ord_id
-  )
+  JOIN t_status   s ON s.stt_id = o.stt_id
+  WHERE NOT EXISTS (SELECT 1 FROM t_ordpag op WHERE op.ord_id = o.ord_id)
+    AND s.stt_nome <> 'CANCELADA'
 ),
 choices AS (
   SELECT
     o.*,
-    (ARRAY['DINHEIRO','CARTÃO DÉBITO','CARTÃO CRÉDITO','PIX','BOLETO'])[((seq - 1) % 5) + 1] AS fpg_nome
+    (ARRAY['DINHEIRO','CARTÃO DÉBITO','CARTÃO CRÉDITO','PIX','BOLETO'])[ceil(random()*5)] AS fpg_nome,
+    -- valor: 120..480 + deslocamento (0.8x..2.0x) + ruído
+    ROUND( (120 + (cid_deslocamento * (0.8 + random()*1.2)) + (random()*200))::numeric, 2 ) AS total_valor,
+    -- offset de vencimento entre -5 e +20 dias da data da OS
+    (floor(random()*26)::int - 5) AS venc_offset
   FROM ords o
 ),
 base AS (
@@ -273,32 +381,25 @@ base AS (
     ch.*,
     f.fpg_id,
     f.fpg_parcelado,
-    /* valor: 150 + deslocamento*2 + um tempero por seq */
-    ROUND( (150 + (cid_deslocamento * 2) + ((seq - 1) % 5) * 25)::numeric, 2) AS total_valor
+    CASE WHEN f.fpg_parcelado = 'S' THEN (2 + floor(random()*2))::int ELSE 1 END AS nparc
   FROM choices ch
   JOIN t_formapag f ON f.fpg_nome = ch.fpg_nome
-),
-expanded AS (
-  -- define número de parcelas (3 para parcelado, senão 1)
-  SELECT
-    b.*,
-    CASE WHEN b.fpg_parcelado = 'S' THEN 3 ELSE 1 END AS nparc
-  FROM base b
 ),
 parts AS (
   SELECT
     b.ord_id,
     b.fpg_id,
     b.total_valor,
+    b.fpg_parcelado,
     b.nparc,
-    b.ord_data,
     gs AS parcela,
     CASE
       WHEN b.nparc = 1 THEN b.total_valor
       WHEN gs < b.nparc THEN ROUND( (b.total_valor / b.nparc)::numeric, 2)
       ELSE b.total_valor - ROUND( (b.total_valor / b.nparc)::numeric, 2) * (b.nparc - 1)
-    END AS parcela_valor
-  FROM expanded b
+    END AS parcela_valor,
+    (b.ord_data + (b.venc_offset * INTERVAL '1 day') + ((gs - 1) * INTERVAL '10 day'))::date AS vencimento
+  FROM base b
   CROSS JOIN LATERAL generate_series(1, b.nparc) AS gs
 )
 INSERT INTO t_ordpag (ord_id, fpg_id, opg_valor, opg_parcela, opg_vencimento, opg_pago)
@@ -307,7 +408,11 @@ SELECT
   p.fpg_id,
   p.parcela_valor,
   p.parcela,
-  (p.ord_data + ((p.parcela - 1) * INTERVAL '10 day'))::date AS opg_vencimento,
-  'N' AS opg_pago
+  p.vencimento,
+  CASE
+    WHEN p.vencimento < CURRENT_DATE - 2 THEN (CASE WHEN random() < 0.70 THEN 'S' ELSE 'N' END)
+    WHEN p.vencimento <= CURRENT_DATE + 2 THEN (CASE WHEN random() < 0.40 THEN 'S' ELSE 'N' END)
+    ELSE 'N'
+  END AS opg_pago
 FROM parts p
 ORDER BY p.ord_id, p.parcela;

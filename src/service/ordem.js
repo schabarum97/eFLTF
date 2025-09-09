@@ -28,7 +28,7 @@ const baseSelect = `
   JOIN t_cidade    c  ON e.cid_id = c.cid_id
   JOIN t_uf        uf ON c.uf_id  = uf.uf_id
   JOIN t_status    st ON o.stt_id = st.stt_id
-  LEFT JOIN t_usuario us ON o.ord_responsavel = us.usu_id`;
+  LEFT JOIN t_usuresponsavel us ON o.ord_responsavel = us.usu_id`;
 
 const sql_getById = `
   ${baseSelect}
@@ -98,7 +98,7 @@ const postOrdem = async (params) => {
       observacao = null,
       data = null,
       hora = null,
-      responsavel_id = null
+      usu_id = null
     } = params
 
     // ===== validações de FK =====
@@ -126,15 +126,15 @@ const postOrdem = async (params) => {
     }
 
     // Responsável (opcional)
-    if (responsavel_id != null) {
-      const vResp = await db.query('SELECT usu_id FROM t_usuario WHERE usu_id = $1', [responsavel_id])
+    if (usu_id != null) {
+      const vResp = await db.query('SELECT usu_id FROM t_usuresponsavel WHERE usu_id = $1', [usu_id])
       if (vResp.rows.length === 0) {
         throw { status: 400, message: 'Responsável informado não existe' }
       }
     }
 
     const result = await db.query(sql_post, [
-      cli_id, end_id, stt_id, observacao, data, hora, responsavel_id
+      cli_id, end_id, stt_id, observacao, data, hora, usu_id
     ])
     return { mensagem: 'Ordem criada com sucesso!', id: result.rows[0].id }
   } catch (err) {
@@ -153,7 +153,7 @@ const putOrdem = async (params) => {
       observacao = null,
       data = null,
       hora = null,
-      responsavel_id = null
+      usu_id = null
     } = params
 
     // ===== validações de FK =====
@@ -169,13 +169,13 @@ const putOrdem = async (params) => {
     const vStt = await db.query('SELECT stt_id FROM t_status WHERE stt_id = $1', [stt_id])
     if (vStt.rows.length === 0) throw { status: 400, message: 'Status informado não existe' }
 
-    if (responsavel_id != null) {
-      const vResp = await db.query('SELECT usu_id FROM t_usuario WHERE usu_id = $1', [responsavel_id])
+    if (usu_id != null) {
+      const vResp = await db.query('SELECT usu_id FROM t_usuresponsavel WHERE usu_id = $1', [usu_id])
       if (vResp.rows.length === 0) throw { status: 400, message: 'Responsável informado não existe' }
     }
 
     const result = await db.query(sql_put, [
-      id, cli_id, end_id, stt_id, observacao, data, hora, responsavel_id
+      id, cli_id, end_id, stt_id, observacao, data, hora, usu_id
     ])
     if (result.rows.length === 0) {
       throw new Error('Ordem não encontrada')
@@ -228,17 +228,17 @@ const patchOrdem = async (params) => {
       binds.push(params.stt_id)
     }
 
-    if (params.responsavel_id !== undefined) {
-      if (params.responsavel_id === null) {
+    if (params.usu_id !== undefined) {
+      if (params.usu_id === null) {
         count++
         fields.push(`ord_responsavel = $${count}`)
         binds.push(null)
       } else {
-        const vResp = await db.query('SELECT usu_id FROM t_usuario WHERE usu_id = $1', [params.responsavel_id])
+        const vResp = await db.query('SELECT usu_id FROM t_usuresponsavel WHERE usu_id = $1', [params.usu_id])
         if (vResp.rows.length === 0) throw { status: 400, message: 'Responsável informado não existe' }
         count++
         fields.push(`ord_responsavel = $${count}`)
-        binds.push(params.responsavel_id)
+        binds.push(params.usu_id)
       }
     }
 
