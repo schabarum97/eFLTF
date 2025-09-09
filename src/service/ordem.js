@@ -56,6 +56,10 @@ const sql_put = `
    WHERE ord_id = $1
 RETURNING ord_id AS id`;
 
+const sql_deletepag = `
+  DELETE FROM t_ordpag
+   WHERE ord_id = $1`;
+
 const sql_delete = `
   DELETE FROM t_ordem
    WHERE ord_id = $1
@@ -272,6 +276,8 @@ const patchOrdem = async (params) => {
 
 const deleteOrdem = async (id) => {
   try {
+    // Mata primeiro os pagamentos vinculados
+    await db.query(sql_deletepag, [id])
     const result = await db.query(sql_delete, [id])
     if (result.rows.length === 0) {
       throw new Error('Ordem não encontrada')

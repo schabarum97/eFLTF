@@ -73,6 +73,35 @@ CREATE TABLE IF NOT EXISTS T_ORDEM (
         FOREIGN KEY (STT_ID) REFERENCES T_STATUS (STT_ID)    
 );
 
+CREATE TABLE IF NOT EXISTS T_FORMAPAG (
+    FPG_ID BIGSERIAL PRIMARY KEY,
+    FPG_NOME VARCHAR(100),
+    FPG_ATIVO VARCHAR(1) DEFAULT 'S',
+    FPG_PARCELADO VARCHAR(1) DEFAULT 'N'
+);
+
+CREATE TABLE IF NOT EXISTS T_ORDPAG (
+    OPG_ID BIGSERIAL PRIMARY KEY,
+    ORD_ID BIGINT NOT NULL,
+    FPG_ID BIGINT NOT NULL,
+    OPG_VALOR DECIMAL(10,2),
+    OPG_PARCELA INTEGER,
+    OPG_VENCIMENTO DATE,
+    OPG_PAGO VARCHAR(1) DEFAULT 'N',
+    
+    CONSTRAINT FK_ORDPAG_ORDEM 
+        FOREIGN KEY (ORD_ID) REFERENCES T_ORDEM (ORD_ID),
+    CONSTRAINT FK_ORDPAG_FORMAPAG 
+        FOREIGN KEY (FPG_ID) REFERENCES T_FORMAPAG (FPG_ID)
+);
+
+INSERT INTO T_FORMAPAG (FPG_NOME, FPG_PARCELADO) VALUES 
+('DINHEIRO', 'N'), 
+('CARTÃO DÉBITO', 'N'), 
+('CARTÃO CRÉDITO', 'S'), 
+('PIX', 'N'),
+('BOLETO', 'N');
+
 INSERT INTO T_STATUS (STT_NOME, STT_COR) VALUES 
 ('ABERTA', 'blue'), 
 ('EM ANDAMENTO', 'orange'), 
@@ -218,3 +247,67 @@ SELECT
   b.ord_hora
 FROM base b
 JOIN T_STATUS s ON s.stt_nome = b.stt_nome;
+
+WITH ords AS (
+  SELECT
+    o.ord_id,
+    o.ord_data,
+    e.cid_id,
+    c.cid_deslocamento,
+    ROW_NUMBER() OVER (ORDER BY o.ord_id) AS seq
+  FROM t_ordem o
+  JOIN t_endercli e ON e.end_id = o.end_id
+  JOIN t_cidade   c ON c.cid_id = e.cid_id
+  WHERE NOT EXISTS (
+    SELECT 1 FROM t_ordpag op WHERE op.ord_id = o.ord_id
+  )
+),
+choices AS (
+  SELECT
+    o.*,
+    (ARRAY['DINHEIRO','CARTÃO DÉBITO','CARTÃO CRÉDITO','PIX','BOLETO'])[((seq - 1) % 5) + 1] AS fpg_nome
+  FROM ords o
+),
+base AS (
+  SELECT
+    ch.*,
+    f.fpg_id,
+    f.fpg_parcelado,
+    /* valor: 150 + deslocamento*2 + um tempero por seq */
+    ROUND( (150 + (cid_deslocamento * 2) + ((seq - 1) % 5) * 25)::numeric, 2) AS total_valor
+  FROM choices ch
+  JOIN t_formapag f ON f.fpg_nome = ch.fpg_nome
+),
+expanded AS (
+  -- define número de parcelas (3 para parcelado, senão 1)
+  SELECT
+    b.*,
+    CASE WHEN b.fpg_parcelado = 'S' THEN 3 ELSE 1 END AS nparc
+  FROM base b
+),
+parts AS (
+  SELECT
+    b.ord_id,
+    b.fpg_id,
+    b.total_valor,
+    b.nparc,
+    b.ord_data,
+    gs AS parcela,
+    CASE
+      WHEN b.nparc = 1 THEN b.total_valor
+      WHEN gs < b.nparc THEN ROUND( (b.total_valor / b.nparc)::numeric, 2)
+      ELSE b.total_valor - ROUND( (b.total_valor / b.nparc)::numeric, 2) * (b.nparc - 1)
+    END AS parcela_valor
+  FROM expanded b
+  CROSS JOIN LATERAL generate_series(1, b.nparc) AS gs
+)
+INSERT INTO t_ordpag (ord_id, fpg_id, opg_valor, opg_parcela, opg_vencimento, opg_pago)
+SELECT
+  p.ord_id,
+  p.fpg_id,
+  p.parcela_valor,
+  p.parcela,
+  (p.ord_data + ((p.parcela - 1) * INTERVAL '10 day'))::date AS opg_vencimento,
+  'N' AS opg_pago
+FROM parts p
+ORDER BY p.ord_id, p.parcela;
