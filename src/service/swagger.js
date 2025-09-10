@@ -15,12 +15,18 @@ const doc = {
 
 const outputFile = './src/docs/swagger.yaml';
 const endpointsFiles = [
-    './src/routes/cliente.js',
-    './src/routes/uf.js',
+    './src/routes/agendamento.js',
     './src/routes/cidade.js',
+    './src/routes/cliente.js',
+    './src/routes/dash.js',
     './src/routes/endereco.js',
+    './src/routes/formapag.js',
+    './src/routes/ordem.js',
+    './src/routes/ordempag.js',
+    './src/routes/responsavel.js',
     './src/routes/status.js',
-
+    './src/routes/uf.js',
+    './src/routes/veiculo.js'
 ];
 
 swaggerAutogen(outputFile, endpointsFiles, doc);

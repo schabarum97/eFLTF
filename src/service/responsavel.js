@@ -3,7 +3,8 @@ const db = require('../configs/pg')
 const baseSelect = `
   SELECT
     usu_id   AS id,
-    usu_nome AS nome
+    usu_nome AS nome, 
+    usu_ativo AS ativo
   FROM t_usuresponsavel`;
 
 const sql_getById = `
@@ -15,13 +16,14 @@ const sql_getAll = `
   ORDER BY t_usuresponsavel.usu_id`;
 
 const sql_post = `
-  INSERT INTO t_usuresponsavel (usu_nome)
-  VALUES ($1)
+  INSERT INTO t_usuresponsavel (usu_nome, usu_ativo)
+  VALUES ($1, COALESCE($2, 'S'))
   RETURNING usu_id AS id`;
 
 const sql_put = `
   UPDATE t_usuresponsavel
-     SET usu_nome = $2
+     SET usu_nome = $2, 
+         usu_ativo = COALESCE($3, usu_ativo)
    WHERE usu_id   = $1
 RETURNING usu_id AS id`;
 
@@ -57,7 +59,7 @@ const getResponsaveis = async () => {
 const postResponsavel = async (params) => {
   try {
     const { nome } = params
-    const result = await db.query(sql_post, [nome])
+    const result = await db.query(sql_post, [nome, ativo])
     return { mensagem: 'Usuário responsável criado com sucesso!', id: result.rows[0].id }
   } catch (err) {
     throw { status: 500, message: 'Erro ao tentar criar Usuário responsável ' + err.message }
@@ -67,7 +69,7 @@ const postResponsavel = async (params) => {
 const putResponsavel = async (params) => {
   try {
     const { id, nome } = params
-    const result = await db.query(sql_put, [id, nome])
+    const result = await db.query(sql_put, [id, nome, ativo])
     if (result.rows.length === 0) {
       throw new Error('Usuário responsável não encontrado')
     }
@@ -88,6 +90,12 @@ const patchResponsavel = async (params) => {
       count++
       fields.push(`usu_nome = $${count}`)
       binds.push(params.nome)
+    }
+
+    if (params.ativo !== undefined) {
+      count++
+      fields.push(`usu_ativo = $${count}`)
+      binds.push(params.ativo)
     }
 
     if (fields.length === 0) {

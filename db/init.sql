@@ -9,7 +9,8 @@ CREATE TABLE IF NOT EXISTS T_VEICULO (
 
 CREATE TABLE IF NOT EXISTS T_USURESPONSAVEL (
     USU_ID       BIGSERIAL  PRIMARY KEY,
-    USU_NOME     VARCHAR(100)
+    USU_NOME     VARCHAR(100),
+    USU_ATIVO    VARCHAR(1) DEFAULT 'S'
 );
 
 CREATE TABLE IF NOT EXISTS T_UF (
@@ -69,6 +70,7 @@ CREATE TABLE IF NOT EXISTS T_ORDEM (
     ORD_HORA        VARCHAR(10),
     ORD_RESPONSAVEL BIGINT,
     VEI_ID          BIGINT,
+    ord_duracao_min INTEGER DEFAULT 60,
 
     CONSTRAINT FK_ORDEM_CLIENTE 
         FOREIGN KEY (CLI_ID) REFERENCES T_CLIENTE (CLI_ID),
@@ -103,6 +105,17 @@ CREATE TABLE IF NOT EXISTS T_ORDPAG (
     CONSTRAINT FK_ORDPAG_FORMAPAG 
         FOREIGN KEY (FPG_ID) REFERENCES T_FORMAPAG (FPG_ID)
 );
+
+CREATE INDEX IF NOT EXISTS idx_ordem_vei_data
+  ON t_ordem (vei_id, ord_data);
+CREATE INDEX IF NOT EXISTS idx_ordem_resp_data
+  ON t_ordem (ord_responsavel, ord_data);
+
+CREATE INDEX IF NOT EXISTS idx_endercli_end
+  ON t_endercli (end_id);
+CREATE INDEX IF NOT EXISTS idx_endercli_cid
+  ON t_endercli (cid_id);
+
 
 INSERT INTO T_VEICULO (VEI_PLACA, VEI_MODELO, VEI_MARCA, VEI_ANO, VEI_ATIVO) VALUES
 ('MBZ5H21', 'L-1620',                 'Mercedes-Benz', 2012, 'S'),
@@ -245,13 +258,10 @@ VALUES
 (15, (SELECT CID_ID FROM T_CIDADE WHERE CID_NOME = 'São Miguel do Oeste'),
    'Centro', 'Rua Marcílio Dias', '89900-000', 520, 'Rua Marcílio Dias, 520');
 
-SELECT setseed(0.42);
-
 WITH bounds AS (
   SELECT (CURRENT_DATE - INTERVAL '22 day')::date AS start_day,
          45::int AS ndays
 ),
--- todos os dias da janela
 days AS (
   SELECT generate_series(start_day, start_day + (ndays - 1), '1 day')::date AS dia
   FROM bounds
@@ -269,40 +279,29 @@ idx_days AS (
 ),
 cnt  AS (SELECT COUNT(*)::int AS n FROM idx_days),
 
--- usuários (round-robin)
+-- usuários
 u AS (
   SELECT row_number() OVER (ORDER BY usu_id) AS idx, usu_id
   FROM t_usuresponsavel
 ),
 cntu AS (SELECT COUNT(*)::int AS n FROM u),
-
--- veículos ativos (round-robin)
+-- veículos ativos
 v AS (
   SELECT row_number() OVER (ORDER BY vei_id) AS idx, vei_id
   FROM t_veiculo
   WHERE COALESCE(vei_ativo, 'S') = 'S'
 ),
 cntv AS (SELECT COUNT(*)::int AS n FROM v),
-
--- quantidade de OS
-seq AS (SELECT generate_series(1, 240) AS n),
-
--- base distribuída
+-- quantidade de OS a gerar
+seq AS (SELECT generate_series(1, 100) AS n),
 base AS (
   SELECT
     s.n AS seq,
     ((s.n - 1) % 15) + 1 AS cli_id,
     d.dia AS ord_data,
 
-    -- hora: sábado (DOW=6) 7..11; demais dias 7..19
-    CASE
-      WHEN EXTRACT(DOW FROM d.dia)::int = 6 THEN
-        lpad((7 + floor(random() * 5))::int::text, 2, '0') || ':' ||
-        lpad((ARRAY[0,10,15,20,30,40,45,50])[ceil(random()*8)]::int::text, 2, '0')
-      ELSE
-        lpad((7 + floor(random() * 13))::int::text, 2, '0') || ':' ||
-        lpad((ARRAY[0,10,15,20,30,40,45,50])[ceil(random()*8)]::int::text, 2, '0')
-    END AS ord_hora,
+    -- escolhe turno (manhã/tarde) e hora/minuto válidos via LATERAL
+    lpad(h.hr::text, 2, '0') || ':' || lpad(m.mm::text, 2, '0') AS ord_hora,
 
     -- distribuição de status (~40/25/20/10/5)
     CASE
@@ -321,8 +320,9 @@ base AS (
       'Reagendar visita - acesso bloqueado ao pátio.'
     ])[ceil(random()*5)] AS ord_observacao,
 
-    u.usu_id,                              -- responsável
-    v.vei_id                               -- veículo
+    u.usu_id,              -- responsável
+    v.vei_id,              -- veículo
+    60 AS ord_duracao_min
   FROM seq s
   CROSS JOIN cnt  c
   JOIN idx_days d
@@ -333,9 +333,33 @@ base AS (
   CROSS JOIN cntv cv
   JOIN v
     ON v.idx = ((s.n - 1) % cv.n) + 1
+  CROSS JOIN LATERAL (
+    SELECT CASE WHEN random() < 0.5 THEN 'M' ELSE 'T' END AS turno
+  ) t
+  CROSS JOIN LATERAL (
+    SELECT CASE
+             WHEN t.turno = 'M' THEN (7  + floor(random()*4))::int   -- 7..10
+             ELSE                 (13 + floor(random()*5))::int   -- 13..17
+           END AS hr
+  ) h
+  CROSS JOIN LATERAL (
+    SELECT CASE
+             -- manhã: última hora (10) só até :30 para não cruzar 11:30
+             WHEN t.turno = 'M' AND h.hr = 10
+               THEN (ARRAY[0,10,15,20,30])[ceil(random()*5)]
+             -- tarde: primeira hora (13) a partir de :30 (não cair antes de 13:30)
+             WHEN t.turno = 'T' AND h.hr = 13
+               THEN (ARRAY[30,40,45,50])[ceil(random()*4)]
+             -- tarde: última hora (17) apenas :00 (para terminar 18:00)
+             WHEN t.turno = 'T' AND h.hr = 17
+               THEN 0
+             -- demais casos: minutos padrão
+             ELSE (ARRAY[0,10,15,20,30,40,45,50])[ceil(random()*8)]
+           END::int AS mm
+  ) m
 )
-
-INSERT INTO t_ordem (cli_id, end_id, stt_id, ord_responsavel, vei_id, ord_observacao, ord_data, ord_hora)
+INSERT INTO t_ordem
+  (cli_id, end_id, stt_id, ord_responsavel, vei_id, ord_observacao, ord_data, ord_hora, ord_duracao_min)
 SELECT
   b.cli_id,
   (SELECT e.end_id
@@ -348,9 +372,11 @@ SELECT
   b.vei_id,
   b.ord_observacao,
   b.ord_data,
-  b.ord_hora
+  b.ord_hora,
+  b.ord_duracao_min
 FROM base b
 JOIN t_status s ON s.stt_nome = b.stt_nome;
+
 
 WITH ords AS (
   SELECT
@@ -370,9 +396,7 @@ choices AS (
   SELECT
     o.*,
     (ARRAY['DINHEIRO','CARTÃO DÉBITO','CARTÃO CRÉDITO','PIX','BOLETO'])[ceil(random()*5)] AS fpg_nome,
-    -- valor: 120..480 + deslocamento (0.8x..2.0x) + ruído
     ROUND( (120 + (cid_deslocamento * (0.8 + random()*1.2)) + (random()*200))::numeric, 2 ) AS total_valor,
-    -- offset de vencimento entre -5 e +20 dias da data da OS
     (floor(random()*26)::int - 5) AS venc_offset
   FROM ords o
 ),

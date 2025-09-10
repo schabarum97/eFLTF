@@ -17,6 +17,429 @@
     "aplication/json"
   ],
   "paths": {
+    "/agendamento/disponibilidade": {
+      "get": {
+        "tags": [
+          "Agendamento"
+        ],
+        "summary": "Lista horários livres por veículo",
+        "description": "Retorna os intervalos (data/hora) disponíveis para todos os veículos ativos no período informado, desconsiderando OS canceladas.",
+        "parameters": [
+          {
+            "name": "de",
+            "in": "query",
+            "description": "Data inicial (YYYY-MM-DD)",
+            "required": true,
+            "type": "string",
+            "example": "2025-09-15"
+          },
+          {
+            "name": "ate",
+            "in": "query",
+            "description": "Data final (YYYY-MM-DD)",
+            "required": true,
+            "type": "string",
+            "example": "2025-09-20"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso!",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total": {
+                  "type": "number",
+                  "example": 6
+                },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "vei_id": {
+                        "type": "number",
+                        "example": 2
+                      },
+                      "inicio": {
+                        "type": "string",
+                        "example": "2025-09-15T07:00:00.000Z"
+                      },
+                      "fim": {
+                        "type": "string",
+                        "example": "2025-09-15T08:00:00.000Z"
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "Parâmetros obrigatórios ausentes (de, ate)"
+          },
+          "500": {
+            "description": "Erro interno ao consultar disponibilidade"
+          }
+        }
+      }
+    },
+    "/cidade": {
+      "get": {
+        "tags": [
+          "Cidade"
+        ],
+        "summary": "Lista todas as cidades",
+        "description": "Retorna a lista completa de cidades cadastradas, incluindo UF",
+        "responses": {
+          "200": {
+            "description": "Sucesso!",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total": {
+                  "type": "number",
+                  "example": 2
+                },
+                "cidades": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "cid_id": {
+                        "type": "number",
+                        "example": 2
+                      },
+                      "cid_nome": {
+                        "type": "string",
+                        "example": "Rio de Janeiro"
+                      },
+                      "uf_id": {
+                        "type": "number",
+                        "example": 2
+                      },
+                      "uf_nome": {
+                        "type": "string",
+                        "example": "Rio de Janeiro"
+                      },
+                      "uf_sigla": {
+                        "type": "string",
+                        "example": "RJ"
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno ao buscar cidades"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Cidade"
+        ],
+        "summary": "Cria uma nova cidade",
+        "description": "Cria uma nova cidade no sistema, informando UF existente",
+        "parameters": [
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Dados para criar uma nova cidade",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nome": {
+                  "type": "string",
+                  "example": "Campinas"
+                },
+                "uf_id": {
+                  "type": "number",
+                  "example": 1
+                }
+              },
+              "required": [
+                "nome",
+                "uf_id"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Cidade criada",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Cidade criada com sucesso!"
+                },
+                "id": {
+                  "type": "number",
+                  "example": 3
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "UF informada não existe"
+          },
+          "500": {
+            "description": "Erro ao tentar criar a cidade"
+          }
+        }
+      }
+    },
+    "/cidade/id/{id}": {
+      "get": {
+        "tags": [
+          "Cidade"
+        ],
+        "summary": "Consulta cidade por ID",
+        "description": "Consulta os detalhes de uma cidade específica pelo ID, incluindo UF",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID da cidade",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso!",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total": {
+                  "type": "number",
+                  "example": 1
+                },
+                "cidade": {
+                  "type": "object",
+                  "properties": {
+                    "cid_id": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "cid_nome": {
+                      "type": "string",
+                      "example": "São Paulo"
+                    },
+                    "uf_id": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "uf_nome": {
+                      "type": "string",
+                      "example": "São Paulo"
+                    },
+                    "uf_sigla": {
+                      "type": "string",
+                      "example": "SP"
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Cidade não encontrada"
+          },
+          "500": {
+            "description": "Erro interno ao tentar fazer a busca"
+          }
+        }
+      }
+    },
+    "/cidade/{id}": {
+      "put": {
+        "tags": [
+          "Cidade"
+        ],
+        "summary": "Atualiza cidade por ID",
+        "description": "Atualiza os detalhes de uma cidade específica pelo ID, incluindo alteração de UF",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID da cidade",
+            "example": 1
+          },
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Dados para atualizar a cidade",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nome": {
+                  "type": "string",
+                  "example": "São Paulo Atualizada"
+                },
+                "uf_id": {
+                  "type": "number",
+                  "example": 1
+                }
+              },
+              "required": [
+                "nome",
+                "uf_id"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cidade atualizada",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Cidade atualizada com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "UF informada não existe"
+          },
+          "404": {
+            "description": "Cidade não encontrada"
+          },
+          "500": {
+            "description": "Erro ao tentar atualizar a cidade"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Cidade"
+        ],
+        "summary": "Atualiza parcialmente cidade por ID",
+        "description": "Atualiza parcialmente os dados de uma cidade específica pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID da cidade",
+            "example": 1
+          },
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Dados para atualizar parcialmente a cidade",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nome": {
+                  "type": "string",
+                  "example": "Cidade Parcial"
+                },
+                "uf_id": {
+                  "type": "number",
+                  "example": 2
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cidade atualizada",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Cidade atualizada com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "UF informada não existe"
+          },
+          "404": {
+            "description": "Cidade não encontrada"
+          },
+          "500": {
+            "description": "Erro ao tentar atualizar a cidade"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Cidade"
+        ],
+        "summary": "Deleta cidade por ID",
+        "description": "Deleta uma cidade específica pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID da cidade",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Cidade deletada",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Cidade deletada com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Cidade não encontrada"
+          },
+          "500": {
+            "description": "Erro ao tentar deletar a cidade"
+          }
+        }
+      }
+    },
     "/cliente": {
       "get": {
         "tags": [
@@ -407,412 +830,42 @@
         }
       }
     },
-    "/uf": {
+    "/dash/resumo": {
       "get": {
         "tags": [
-          "UF"
+          "Dashboard"
         ],
-        "summary": "Lista todas as UFs",
-        "description": "Retorna a lista completa de UFs cadastradas",
+        "summary": "Resumo geral (KPIs)",
+        "description": "Retorna KPIs do painel: abertas, atrasadas, vencem_hoje, concluídas no mês, faturamento do mês e ticket médio do mês.",
         "responses": {
           "200": {
             "description": "Sucesso!",
             "schema": {
               "type": "object",
               "properties": {
-                "total": {
+                "abertas": {
                   "type": "number",
-                  "example": 2
+                  "example": 12
                 },
-                "ufs": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "uf_id": {
-                        "type": "number",
-                        "example": 2
-                      },
-                      "uf_nome": {
-                        "type": "string",
-                        "example": "Rio de Janeiro"
-                      }
-                    }
-                  }
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
-          },
-          "500": {
-            "description": "Erro interno ao buscar UFs"
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "UF"
-        ],
-        "summary": "Cria uma nova UF",
-        "description": "Cria uma nova UF no sistema",
-        "parameters": [
-          {
-            "name": "obj",
-            "in": "body",
-            "description": "Dados para criar uma nova UF",
-            "required": true,
-            "schema": {
-              "type": "object",
-              "properties": {
-                "nome": {
-                  "type": "string",
-                  "example": "Minas Gerais"
-                }
-              },
-              "required": [
-                "nome"
-              ]
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "UF criada",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "mensagem": {
-                  "type": "string",
-                  "example": "UF criada com sucesso!"
-                },
-                "id": {
-                  "type": "number",
-                  "example": 1
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
-          },
-          "500": {
-            "description": "Erro ao tentar criar a UF"
-          }
-        }
-      }
-    },
-    "/uf/id/{id}": {
-      "get": {
-        "tags": [
-          "UF"
-        ],
-        "summary": "Consulta UF por ID",
-        "description": "Consulta os detalhes de uma UF específica pelo ID",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "integer",
-            "description": "ID da UF",
-            "example": 1
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Sucesso!",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "total": {
-                  "type": "number",
-                  "example": 1
-                },
-                "uf": {
-                  "type": "object",
-                  "properties": {
-                    "uf_id": {
-                      "type": "number",
-                      "example": 1
-                    },
-                    "uf_nome": {
-                      "type": "string",
-                      "example": "São Paulo"
-                    }
-                  }
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
-          },
-          "404": {
-            "description": "UF não encontrada"
-          },
-          "500": {
-            "description": "Erro interno ao tentar fazer a busca"
-          }
-        }
-      }
-    },
-    "/uf/{id}": {
-      "put": {
-        "tags": [
-          "UF"
-        ],
-        "summary": "Atualiza UF por ID",
-        "description": "Atualiza os detalhes de uma UF específica pelo ID",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "integer",
-            "description": "ID da UF",
-            "example": 1
-          },
-          {
-            "name": "obj",
-            "in": "body",
-            "description": "Dados para atualizar a UF",
-            "required": true,
-            "schema": {
-              "type": "object",
-              "properties": {
-                "nome": {
-                  "type": "string",
-                  "example": "São Paulo Atualizada"
-                }
-              },
-              "required": [
-                "nome"
-              ]
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "UF atualizada",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "mensagem": {
-                  "type": "string",
-                  "example": "UF atualizada com sucesso!"
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
-          },
-          "404": {
-            "description": "UF não encontrada"
-          },
-          "500": {
-            "description": "Erro ao tentar atualizar a UF"
-          }
-        }
-      },
-      "patch": {
-        "tags": [
-          "UF"
-        ],
-        "summary": "Atualiza parcialmente UF por ID",
-        "description": "Atualiza parcialmente os dados de uma UF específica pelo ID",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "integer",
-            "description": "ID da UF",
-            "example": 1
-          },
-          {
-            "name": "obj",
-            "in": "body",
-            "description": "Dados para atualizar parcialmente a UF",
-            "required": true,
-            "schema": {
-              "type": "object",
-              "properties": {
-                "nome": {
-                  "type": "string",
-                  "example": "UF Parcialmente Atualizada"
-                }
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "UF atualizada",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "mensagem": {
-                  "type": "string",
-                  "example": "UF atualizada com sucesso!"
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
-          },
-          "404": {
-            "description": "UF não encontrada"
-          },
-          "500": {
-            "description": "Erro ao tentar atualizar a UF"
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "UF"
-        ],
-        "summary": "Deleta UF por ID",
-        "description": "Deleta uma UF específica pelo ID",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "integer",
-            "description": "ID da UF",
-            "example": 1
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "UF deletada",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "mensagem": {
-                  "type": "string",
-                  "example": "UF deletada com sucesso!"
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
-          },
-          "404": {
-            "description": "UF não encontrada"
-          },
-          "500": {
-            "description": "Erro ao tentar deletar a UF"
-          }
-        }
-      }
-    },
-    "/cidade": {
-      "get": {
-        "tags": [
-          "Cidade"
-        ],
-        "summary": "Lista todas as cidades",
-        "description": "Retorna a lista completa de cidades cadastradas, incluindo UF",
-        "responses": {
-          "200": {
-            "description": "Sucesso!",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "total": {
-                  "type": "number",
-                  "example": 2
-                },
-                "cidades": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "cid_id": {
-                        "type": "number",
-                        "example": 2
-                      },
-                      "cid_nome": {
-                        "type": "string",
-                        "example": "Rio de Janeiro"
-                      },
-                      "uf_id": {
-                        "type": "number",
-                        "example": 2
-                      },
-                      "uf_nome": {
-                        "type": "string",
-                        "example": "Rio de Janeiro"
-                      },
-                      "uf_sigla": {
-                        "type": "string",
-                        "example": "RJ"
-                      }
-                    }
-                  }
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
-          },
-          "500": {
-            "description": "Erro interno ao buscar cidades"
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Cidade"
-        ],
-        "summary": "Cria uma nova cidade",
-        "description": "Cria uma nova cidade no sistema, informando UF existente",
-        "parameters": [
-          {
-            "name": "obj",
-            "in": "body",
-            "description": "Dados para criar uma nova cidade",
-            "required": true,
-            "schema": {
-              "type": "object",
-              "properties": {
-                "nome": {
-                  "type": "string",
-                  "example": "Campinas"
-                },
-                "uf_id": {
-                  "type": "number",
-                  "example": 1
-                }
-              },
-              "required": [
-                "nome",
-                "uf_id"
-              ]
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "Cidade criada",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "mensagem": {
-                  "type": "string",
-                  "example": "Cidade criada com sucesso!"
-                },
-                "id": {
+                "atrasadas": {
                   "type": "number",
                   "example": 3
+                },
+                "vencem_hoje": {
+                  "type": "number",
+                  "example": 5
+                },
+                "concluidas_mes": {
+                  "type": "number",
+                  "example": 18
+                },
+                "faturamento_mes": {
+                  "type": "number",
+                  "example": 12450.75
+                },
+                "ticket_medio_mes": {
+                  "type": "number",
+                  "example": 415.02
                 }
               },
               "xml": {
@@ -820,32 +873,19 @@
               }
             }
           },
-          "400": {
-            "description": "UF informada não existe"
-          },
           "500": {
-            "description": "Erro ao tentar criar a cidade"
+            "description": "Erro interno ao buscar resumo do dash"
           }
         }
       }
     },
-    "/cidade/id/{id}": {
+    "/dash/por-responsavel": {
       "get": {
         "tags": [
-          "Cidade"
+          "Dashboard"
         ],
-        "summary": "Consulta cidade por ID",
-        "description": "Consulta os detalhes de uma cidade específica pelo ID, incluindo UF",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "integer",
-            "description": "ID da cidade",
-            "example": 1
-          }
-        ],
+        "summary": "OS por responsável",
+        "description": "Agrupa a quantidade de ordens por responsável (inclui \"— Sem responsável —\").",
         "responses": {
           "200": {
             "description": "Sucesso!",
@@ -854,30 +894,21 @@
               "properties": {
                 "total": {
                   "type": "number",
-                  "example": 1
+                  "example": 3
                 },
-                "cidade": {
-                  "type": "object",
-                  "properties": {
-                    "cid_id": {
-                      "type": "number",
-                      "example": 1
-                    },
-                    "cid_nome": {
-                      "type": "string",
-                      "example": "São Paulo"
-                    },
-                    "uf_id": {
-                      "type": "number",
-                      "example": 1
-                    },
-                    "uf_nome": {
-                      "type": "string",
-                      "example": "São Paulo"
-                    },
-                    "uf_sigla": {
-                      "type": "string",
-                      "example": "SP"
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "responsavel": {
+                        "type": "string",
+                        "example": "— Sem responsável —"
+                      },
+                      "total": {
+                        "type": "number",
+                        "example": 2
+                      }
                     }
                   }
                 }
@@ -887,64 +918,44 @@
               }
             }
           },
-          "404": {
-            "description": "Cidade não encontrada"
-          },
           "500": {
-            "description": "Erro interno ao tentar fazer a busca"
+            "description": "Erro interno ao buscar dash por responsável"
           }
         }
       }
     },
-    "/cidade/{id}": {
-      "put": {
+    "/dash/backlog-aging": {
+      "get": {
         "tags": [
-          "Cidade"
+          "Dashboard"
         ],
-        "summary": "Atualiza cidade por ID",
-        "description": "Atualiza os detalhes de uma cidade específica pelo ID, incluindo alteração de UF",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "integer",
-            "description": "ID da cidade",
-            "example": 1
-          },
-          {
-            "name": "obj",
-            "in": "body",
-            "description": "Dados para atualizar a cidade",
-            "required": true,
-            "schema": {
-              "type": "object",
-              "properties": {
-                "nome": {
-                  "type": "string",
-                  "example": "São Paulo Atualizada"
-                },
-                "uf_id": {
-                  "type": "number",
-                  "example": 1
-                }
-              },
-              "required": [
-                "nome",
-                "uf_id"
-              ]
-            }
-          }
-        ],
+        "summary": "Backlog por idade",
+        "description": "Distribuição das OS abertas por faixas de idade (0-2, 3-7, 8-14 e >14 dias).",
         "responses": {
           "200": {
-            "description": "Cidade atualizada",
+            "description": "Sucesso!",
             "schema": {
               "type": "object",
               "properties": {
-                "mensagem": {
-                  "type": "string",
-                  "example": "Cidade atualizada com sucesso!"
+                "total": {
+                  "type": "number",
+                  "example": 4
+                },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "faixa": {
+                        "type": "string",
+                        "example": ">14"
+                      },
+                      "total": {
+                        "type": "number",
+                        "example": 1
+                      }
+                    }
+                  }
                 }
               },
               "xml": {
@@ -952,61 +963,64 @@
               }
             }
           },
-          "400": {
-            "description": "UF informada não existe"
-          },
-          "404": {
-            "description": "Cidade não encontrada"
-          },
           "500": {
-            "description": "Erro ao tentar atualizar a cidade"
+            "description": "Erro interno ao buscar dash backlog/idade"
           }
         }
-      },
-      "patch": {
+      }
+    },
+    "/dash/hoje-amanha": {
+      "get": {
         "tags": [
-          "Cidade"
+          "Dashboard"
         ],
-        "summary": "Atualiza parcialmente cidade por ID",
-        "description": "Atualiza parcialmente os dados de uma cidade específica pelo ID",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "integer",
-            "description": "ID da cidade",
-            "example": 1
-          },
-          {
-            "name": "obj",
-            "in": "body",
-            "description": "Dados para atualizar parcialmente a cidade",
-            "required": true,
+        "summary": "OS de hoje e amanhã",
+        "description": "Lista as ordens com data igual a hoje e a amanhã, já prontas para ação.",
+        "responses": {
+          "200": {
+            "description": "Sucesso!",
             "schema": {
               "type": "object",
               "properties": {
-                "nome": {
-                  "type": "string",
-                  "example": "Cidade Parcial"
-                },
-                "uf_id": {
+                "total": {
                   "type": "number",
                   "example": 2
-                }
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Cidade atualizada",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "mensagem": {
-                  "type": "string",
-                  "example": "Cidade atualizada com sucesso!"
+                },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "ord_id": {
+                        "type": "number",
+                        "example": 102
+                      },
+                      "cliente": {
+                        "type": "string",
+                        "example": "Comercial Blumen Vale ME"
+                      },
+                      "endereco": {
+                        "type": "string",
+                        "example": "Rua Sete de Setembro, 455"
+                      },
+                      "responsavel": {
+                        "type": "string",
+                        "example": "—"
+                      },
+                      "ord_data": {
+                        "type": "string",
+                        "example": "2025-09-10"
+                      },
+                      "ord_hora": {
+                        "type": "string",
+                        "example": "13:00"
+                      },
+                      "status": {
+                        "type": "string",
+                        "example": "ABERTA"
+                      }
+                    }
+                  }
                 }
               },
               "xml": {
@@ -1014,42 +1028,48 @@
               }
             }
           },
-          "400": {
-            "description": "UF informada não existe"
-          },
-          "404": {
-            "description": "Cidade não encontrada"
-          },
           "500": {
-            "description": "Erro ao tentar atualizar a cidade"
+            "description": "Erro interno ao buscar dash de hoje e amanhã"
           }
         }
-      },
-      "delete": {
+      }
+    },
+    "/dash/carga-dia-hora": {
+      "get": {
         "tags": [
-          "Cidade"
+          "Dashboard"
         ],
-        "summary": "Deleta cidade por ID",
-        "description": "Deleta uma cidade específica pelo ID",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "integer",
-            "description": "ID da cidade",
-            "example": 1
-          }
-        ],
+        "summary": "Carga por dia/horário",
+        "description": "Heatmap: quantidade de OS abertas por dia da semana (0=Dom, ... 6=Sáb) e por hora.",
         "responses": {
-          "204": {
-            "description": "Cidade deletada",
+          "200": {
+            "description": "Sucesso!",
             "schema": {
               "type": "object",
               "properties": {
-                "mensagem": {
-                  "type": "string",
-                  "example": "Cidade deletada com sucesso!"
+                "total": {
+                  "type": "number",
+                  "example": 5
+                },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "dow": {
+                        "type": "number",
+                        "example": 5
+                      },
+                      "hora": {
+                        "type": "number",
+                        "example": 15
+                      },
+                      "total": {
+                        "type": "number",
+                        "example": 1
+                      }
+                    }
+                  }
                 }
               },
               "xml": {
@@ -1057,11 +1077,69 @@
               }
             }
           },
-          "404": {
-            "description": "Cidade não encontrada"
+          "500": {
+            "description": "Erro interno ao buscar dash carga dia/hora"
+          }
+        }
+      }
+    },
+    "/dash/pagamentos-recentes": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "Pagamentos recentes",
+        "description": "Timeline de pagamentos: confirmados ou a vencer (últimos/ próximos 15 dias).",
+        "responses": {
+          "200": {
+            "description": "Sucesso!",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total": {
+                  "type": "number",
+                  "example": 3
+                },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "ref_id": {
+                        "type": "number",
+                        "example": 203
+                      },
+                      "tipo": {
+                        "type": "string",
+                        "example": "Pagamento confirmado"
+                      },
+                      "ts": {
+                        "type": "string",
+                        "example": "2025-09-03T00:00:00.000Z"
+                      },
+                      "cliente": {
+                        "type": "string",
+                        "example": "Hospital São Miguel S/A"
+                      },
+                      "status": {
+                        "type": "string",
+                        "example": "ABERTA"
+                      },
+                      "valor": {
+                        "type": "number",
+                        "example": 890
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "500": {
-            "description": "Erro ao tentar deletar a cidade"
+            "description": "Erro interno ao buscar pagamentos recentes"
           }
         }
       }
@@ -1551,6 +1629,1631 @@
         }
       }
     },
+    "/formapag": {
+      "get": {
+        "tags": [
+          "Forma de Pagamento"
+        ],
+        "summary": "Lista todas as formas de pagamento",
+        "description": "Retorna a lista completa de formas de pagamento cadastradas",
+        "responses": {
+          "200": {
+            "description": "Sucesso!",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total": {
+                  "type": "number",
+                  "example": 2
+                },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "number",
+                        "example": 1
+                      },
+                      "nome": {
+                        "type": "string",
+                        "example": "Dinheiro"
+                      },
+                      "ativo": {
+                        "type": "string",
+                        "example": "S"
+                      },
+                      "parcelado": {
+                        "type": "string",
+                        "example": "N"
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno ao buscar formas de pagamento"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Forma de Pagamento"
+        ],
+        "summary": "Cria uma nova forma de pagamento",
+        "description": "Cria uma nova forma de pagamento no sistema",
+        "parameters": [
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Dados para criar uma nova forma de pagamento",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nome": {
+                  "type": "string",
+                  "example": "Pix"
+                },
+                "ativo": {
+                  "type": "string",
+                  "example": "S"
+                },
+                "parcelado": {
+                  "type": "string",
+                  "example": "N"
+                }
+              },
+              "required": [
+                "nome"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Forma de Pagamento criada",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Forma de Pagamento criada com sucesso!"
+                },
+                "id": {
+                  "type": "number",
+                  "example": 1
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "500": {
+            "description": "Erro ao tentar criar a forma de pagamento"
+          }
+        }
+      }
+    },
+    "/formapag/id/{id}": {
+      "get": {
+        "tags": [
+          "Forma de Pagamento"
+        ],
+        "summary": "Consulta forma de pagamento por ID",
+        "description": "Consulta os detalhes de uma forma de pagamento específica pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID da forma de pagamento",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso!",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total": {
+                  "type": "number",
+                  "example": 1
+                },
+                "item": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "nome": {
+                      "type": "string",
+                      "example": "Cartão de Crédito"
+                    },
+                    "ativo": {
+                      "type": "string",
+                      "example": "S"
+                    },
+                    "parcelado": {
+                      "type": "string",
+                      "example": "S"
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Forma de Pagamento não encontrada"
+          },
+          "500": {
+            "description": "Erro interno ao tentar fazer a busca"
+          }
+        }
+      }
+    },
+    "/formapag/{id}": {
+      "put": {
+        "tags": [
+          "Forma de Pagamento"
+        ],
+        "summary": "Atualiza forma de pagamento por ID",
+        "description": "Atualiza os detalhes de uma forma de pagamento específica pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID da forma de pagamento",
+            "example": 1
+          },
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Dados para atualizar a forma de pagamento",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nome": {
+                  "type": "string",
+                  "example": "Cartão Débito"
+                },
+                "ativo": {
+                  "type": "string",
+                  "example": "S"
+                },
+                "parcelado": {
+                  "type": "string",
+                  "example": "N"
+                }
+              },
+              "required": [
+                "nome"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Forma de Pagamento atualizada",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Forma de Pagamento atualizada com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Forma de Pagamento não encontrada"
+          },
+          "500": {
+            "description": "Erro ao tentar atualizar a forma de pagamento"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Forma de Pagamento"
+        ],
+        "summary": "Atualiza parcialmente forma de pagamento por ID",
+        "description": "Atualiza parcialmente os dados de uma forma de pagamento específica pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID da forma de pagamento",
+            "example": 1
+          },
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Dados para atualizar parcialmente a forma de pagamento",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nome": {
+                  "type": "string",
+                  "example": "Boleto"
+                },
+                "ativo": {
+                  "type": "string",
+                  "example": "N"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Forma de Pagamento atualizada",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Forma de Pagamento atualizada com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Forma de Pagamento não encontrada"
+          },
+          "500": {
+            "description": "Erro ao tentar atualizar a forma de pagamento"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Forma de Pagamento"
+        ],
+        "summary": "Deleta forma de pagamento por ID",
+        "description": "Deleta uma forma de pagamento específica pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID da forma de pagamento",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Forma de Pagamento deletada",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Forma de Pagamento deletada com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Forma de Pagamento não encontrada"
+          },
+          "500": {
+            "description": "Erro ao tentar deletar a forma de pagamento"
+          }
+        }
+      }
+    },
+    "/ordem": {
+      "get": {
+        "tags": [
+          "Ordem"
+        ],
+        "summary": "Lista todas as ordens",
+        "description": "Retorna a lista completa de ordens com informações de cliente, endereço, cidade/UF, status e responsável.",
+        "responses": {
+          "200": {
+            "description": "Sucesso!",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total": {
+                  "type": "number",
+                  "example": 2
+                },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "number",
+                        "example": 10
+                      },
+                      "cli_id": {
+                        "type": "number",
+                        "example": 1
+                      },
+                      "cliente_nome": {
+                        "type": "string",
+                        "example": "ACME Ltda"
+                      },
+                      "end_id": {
+                        "type": "number",
+                        "example": 5
+                      },
+                      "end_logradouro": {
+                        "type": "string",
+                        "example": "Rua das Flores"
+                      },
+                      "end_numero": {
+                        "type": "string",
+                        "example": "123"
+                      },
+                      "end_bairro": {
+                        "type": "string",
+                        "example": "Centro"
+                      },
+                      "end_cep": {
+                        "type": "string",
+                        "example": "89000-000"
+                      },
+                      "cid_id": {
+                        "type": "number",
+                        "example": 7
+                      },
+                      "cidade_nome": {
+                        "type": "string",
+                        "example": "Blumenau"
+                      },
+                      "uf_sigla": {
+                        "type": "string",
+                        "example": "SC"
+                      },
+                      "uf_nome": {
+                        "type": "string",
+                        "example": "Santa Catarina"
+                      },
+                      "stt_id": {
+                        "type": "number",
+                        "example": 1
+                      },
+                      "status_nome": {
+                        "type": "string",
+                        "example": "Aberta"
+                      },
+                      "status_cor": {
+                        "type": "string",
+                        "example": "#00FF00"
+                      },
+                      "observacao": {
+                        "type": "string",
+                        "example": "Atender cliente pela manhã"
+                      },
+                      "data": {
+                        "type": "string",
+                        "example": "2025-09-08"
+                      },
+                      "hora": {
+                        "type": "string",
+                        "example": "09:30"
+                      },
+                      "responsavel_id": {
+                        "type": "number",
+                        "example": 3
+                      },
+                      "responsavel_nome": {
+                        "type": "string",
+                        "example": "João Silva"
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno ao buscar ordens"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Ordem"
+        ],
+        "summary": "Cria uma nova ordem",
+        "description": "Cria uma nova ordem no sistema. Valida cliente, endereço (inclui verificação de pertencimento ao cliente), status e responsável (opcional).",
+        "parameters": [
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Dados para criar uma ordem",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "cli_id": {
+                  "type": "number",
+                  "example": 1
+                },
+                "end_id": {
+                  "type": "number",
+                  "example": 5
+                },
+                "stt_id": {
+                  "type": "number",
+                  "example": 1
+                },
+                "observacao": {
+                  "type": "string",
+                  "example": "Atender cliente pela manhã"
+                },
+                "data": {
+                  "type": "string",
+                  "example": "2025-09-08"
+                },
+                "hora": {
+                  "type": "string",
+                  "example": "09:30"
+                },
+                "responsavel_id": {
+                  "type": "number",
+                  "example": 3
+                }
+              },
+              "required": [
+                "cli_id",
+                "end_id",
+                "stt_id"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Ordem criada",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Ordem criada com sucesso!"
+                },
+                "id": {
+                  "type": "number",
+                  "example": 11
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "Validação de FK falhou (cliente, endereço, status ou responsável)"
+          },
+          "500": {
+            "description": "Erro ao tentar criar a ordem"
+          }
+        }
+      }
+    },
+    "/ordem/id/{id}": {
+      "get": {
+        "tags": [
+          "Ordem"
+        ],
+        "summary": "Consulta ordem por ID",
+        "description": "Consulta os detalhes de uma ordem específica pelo ID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID da ordem",
+            "example": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso!",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total": {
+                  "type": "number",
+                  "example": 1
+                },
+                "item": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "number",
+                      "example": 10
+                    },
+                    "cli_id": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "cliente_nome": {
+                      "type": "string",
+                      "example": "ACME Ltda"
+                    },
+                    "end_id": {
+                      "type": "number",
+                      "example": 5
+                    },
+                    "end_logradouro": {
+                      "type": "string",
+                      "example": "Rua das Flores"
+                    },
+                    "end_numero": {
+                      "type": "string",
+                      "example": "123"
+                    },
+                    "end_bairro": {
+                      "type": "string",
+                      "example": "Centro"
+                    },
+                    "end_cep": {
+                      "type": "string",
+                      "example": "89000-000"
+                    },
+                    "cid_id": {
+                      "type": "number",
+                      "example": 7
+                    },
+                    "cidade_nome": {
+                      "type": "string",
+                      "example": "Blumenau"
+                    },
+                    "uf_sigla": {
+                      "type": "string",
+                      "example": "SC"
+                    },
+                    "uf_nome": {
+                      "type": "string",
+                      "example": "Santa Catarina"
+                    },
+                    "stt_id": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "status_nome": {
+                      "type": "string",
+                      "example": "Aberta"
+                    },
+                    "status_cor": {
+                      "type": "string",
+                      "example": "#00FF00"
+                    },
+                    "observacao": {
+                      "type": "string",
+                      "example": "Atender cliente pela manhã"
+                    },
+                    "data": {
+                      "type": "string",
+                      "example": "2025-09-08"
+                    },
+                    "hora": {
+                      "type": "string",
+                      "example": "09:30"
+                    },
+                    "responsavel_id": {
+                      "type": "number",
+                      "example": 3
+                    },
+                    "responsavel_nome": {
+                      "type": "string",
+                      "example": "João Silva"
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Ordem não encontrada"
+          },
+          "500": {
+            "description": "Erro interno ao tentar fazer a busca"
+          }
+        }
+      }
+    },
+    "/ordem/{id}": {
+      "put": {
+        "tags": [
+          "Ordem"
+        ],
+        "summary": "Atualiza ordem por ID",
+        "description": "Atualiza todos os campos de uma ordem. Valida FKs e coerência endereço/cliente.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID da ordem",
+            "example": 10
+          },
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Dados para atualizar a ordem",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "cli_id": {
+                  "type": "number",
+                  "example": 1
+                },
+                "end_id": {
+                  "type": "number",
+                  "example": 5
+                },
+                "stt_id": {
+                  "type": "number",
+                  "example": 2
+                },
+                "observacao": {
+                  "type": "string",
+                  "example": "Remarcada para tarde"
+                },
+                "data": {
+                  "type": "string",
+                  "example": "2025-09-09"
+                },
+                "hora": {
+                  "type": "string",
+                  "example": "14:00"
+                },
+                "responsavel_id": {
+                  "type": "number",
+                  "example": 4
+                }
+              },
+              "required": [
+                "cli_id",
+                "end_id",
+                "stt_id"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ordem atualizada",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Ordem atualizada com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "Validação de FK falhou (cliente, endereço, status ou responsável)"
+          },
+          "404": {
+            "description": "Ordem não encontrada"
+          },
+          "500": {
+            "description": "Erro ao tentar atualizar a ordem"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Ordem"
+        ],
+        "summary": "Atualiza parcialmente ordem por ID",
+        "description": "Atualiza parcialmente os campos de uma ordem. FKs são validadas quando informadas.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID da ordem",
+            "example": 10
+          },
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Campos a atualizar parcialmente",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "stt_id": {
+                  "type": "number",
+                  "example": 3
+                },
+                "observacao": {
+                  "type": "string",
+                  "example": "Reagendada"
+                },
+                "hora": {
+                  "type": "string",
+                  "example": "16:00"
+                },
+                "responsavel_id": {}
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ordem atualizada",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Ordem atualizada com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "Validação de FK falhou"
+          },
+          "404": {
+            "description": "Ordem não encontrada"
+          },
+          "500": {
+            "description": "Erro ao tentar atualizar a ordem"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Ordem"
+        ],
+        "summary": "Deleta ordem por ID",
+        "description": "Deleta uma ordem específica pelo ID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID da ordem",
+            "example": 10
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Ordem deletada",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Ordem deletada com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Ordem não encontrada"
+          },
+          "500": {
+            "description": "Erro ao tentar deletar a ordem"
+          }
+        }
+      }
+    },
+    "/ordempag": {
+      "get": {
+        "tags": [
+          "Pagamentos da OS"
+        ],
+        "summary": "Lista todos os pagamentos de ordens de serviço",
+        "description": "Retorna a lista completa de pagamentos, incluindo dados da ordem, cliente e forma de pagamento",
+        "responses": {
+          "200": {
+            "description": "Sucesso!",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total": {
+                  "type": "number",
+                  "example": 2
+                },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "number",
+                        "example": 1
+                      },
+                      "ord_id": {
+                        "type": "number",
+                        "example": 10
+                      },
+                      "fpg_id": {
+                        "type": "number",
+                        "example": 2
+                      },
+                      "valor": {
+                        "type": "number",
+                        "example": 100
+                      },
+                      "parcela": {
+                        "type": "number",
+                        "example": 1
+                      },
+                      "vencimento": {
+                        "type": "string",
+                        "example": "2025-09-10"
+                      },
+                      "pago": {
+                        "type": "string",
+                        "example": "N"
+                      },
+                      "ordem_id": {
+                        "type": "number",
+                        "example": 10
+                      },
+                      "ordem_data": {
+                        "type": "string",
+                        "example": "2025-09-01"
+                      },
+                      "cli_id": {
+                        "type": "number",
+                        "example": 5
+                      },
+                      "cliente_nome": {
+                        "type": "string",
+                        "example": "Cliente X"
+                      },
+                      "forma_pagamento_nome": {
+                        "type": "string",
+                        "example": "Cartão de Crédito"
+                      },
+                      "forma_pagamento_parcelado": {
+                        "type": "string",
+                        "example": "S"
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno ao buscar pagamentos"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Pagamentos da OS"
+        ],
+        "summary": "Cria novos pagamentos da OS",
+        "description": "Cria registros de pagamentos para uma ordem de serviço, permitindo parcelamento",
+        "parameters": [
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Dados para criar os pagamentos",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "ord_id": {
+                  "type": "number",
+                  "example": 10
+                },
+                "fpg_id": {
+                  "type": "number",
+                  "example": 2
+                },
+                "valor": {
+                  "type": "number",
+                  "example": 300
+                },
+                "parcela": {
+                  "type": "number",
+                  "example": 3
+                },
+                "vencimento": {
+                  "type": "string",
+                  "example": "2025-09-10"
+                },
+                "pago": {
+                  "type": "string",
+                  "example": "N"
+                }
+              },
+              "required": [
+                "ord_id",
+                "fpg_id",
+                "valor",
+                "parcela",
+                "vencimento"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Pagamentos criados",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Pagamentos da OS criados com sucesso!"
+                },
+                "ids": {
+                  "type": "array",
+                  "example": [
+                    1,
+                    2,
+                    3
+                  ],
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                "parcelas": {
+                  "type": "number",
+                  "example": 3
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "Erro de validação (ordem ou forma de pagamento inválida)"
+          },
+          "500": {
+            "description": "Erro ao tentar criar os pagamentos"
+          }
+        }
+      }
+    },
+    "/ordempag/id/{id}": {
+      "get": {
+        "tags": [
+          "Pagamentos da OS"
+        ],
+        "summary": "Consulta pagamento por ID",
+        "description": "Consulta os detalhes de um pagamento específico da OS",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID do pagamento",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso!",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total": {
+                  "type": "number",
+                  "example": 1
+                },
+                "item": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "ord_id": {
+                      "type": "number",
+                      "example": 10
+                    },
+                    "fpg_id": {
+                      "type": "number",
+                      "example": 2
+                    },
+                    "valor": {
+                      "type": "number",
+                      "example": 100
+                    },
+                    "parcela": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "vencimento": {
+                      "type": "string",
+                      "example": "2025-09-10"
+                    },
+                    "pago": {
+                      "type": "string",
+                      "example": "N"
+                    },
+                    "ordem_id": {
+                      "type": "number",
+                      "example": 10
+                    },
+                    "ordem_data": {
+                      "type": "string",
+                      "example": "2025-09-01"
+                    },
+                    "cli_id": {
+                      "type": "number",
+                      "example": 5
+                    },
+                    "cliente_nome": {
+                      "type": "string",
+                      "example": "Cliente X"
+                    },
+                    "forma_pagamento_nome": {
+                      "type": "string",
+                      "example": "Cartão de Crédito"
+                    },
+                    "forma_pagamento_parcelado": {
+                      "type": "string",
+                      "example": "S"
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Pagamento não encontrado"
+          },
+          "500": {
+            "description": "Erro interno ao tentar buscar"
+          }
+        }
+      }
+    },
+    "/ordempag/{id}": {
+      "put": {
+        "tags": [
+          "Pagamentos da OS"
+        ],
+        "summary": "Atualiza pagamento por ID",
+        "description": "Atualiza todos os dados de um pagamento da OS",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID do pagamento",
+            "example": 1
+          },
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Dados do pagamento",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "ord_id": {
+                  "type": "number",
+                  "example": 10
+                },
+                "fpg_id": {
+                  "type": "number",
+                  "example": 2
+                },
+                "valor": {
+                  "type": "number",
+                  "example": 100
+                },
+                "parcela": {
+                  "type": "number",
+                  "example": 1
+                },
+                "vencimento": {
+                  "type": "string",
+                  "example": "2025-09-10"
+                },
+                "pago": {
+                  "type": "string",
+                  "example": "S"
+                }
+              },
+              "required": [
+                "ord_id",
+                "fpg_id",
+                "valor",
+                "parcela",
+                "vencimento",
+                "pago"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pagamento atualizado",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Pagamento da OS atualizado com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Pagamento não encontrado"
+          },
+          "500": {
+            "description": "Erro ao tentar atualizar o pagamento"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Pagamentos da OS"
+        ],
+        "summary": "Atualiza parcialmente pagamento por ID",
+        "description": "Atualiza apenas os campos informados de um pagamento da OS",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID do pagamento",
+            "example": 1
+          },
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Campos a atualizar",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "pago": {
+                  "type": "string",
+                  "example": "S"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pagamento atualizado",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Pagamento da OS atualizado com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Pagamento não encontrado"
+          },
+          "500": {
+            "description": "Erro ao tentar atualizar o pagamento"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Pagamentos da OS"
+        ],
+        "summary": "Deleta pagamento por ID",
+        "description": "Remove um pagamento específico da OS",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID do pagamento",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Pagamento deletado",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Pagamento da OS deletado com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Pagamento não encontrado"
+          },
+          "500": {
+            "description": "Erro ao tentar deletar o pagamento"
+          }
+        }
+      }
+    },
+    "/responsavel": {
+      "get": {
+        "tags": [
+          "Usuário Responsável"
+        ],
+        "summary": "Lista todos os usuários responsáveis",
+        "description": "Retorna a lista completa de usuários responsáveis cadastrados",
+        "responses": {
+          "200": {
+            "description": "Sucesso!",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total": {
+                  "type": "number",
+                  "example": 2
+                },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "number",
+                        "example": 2
+                      },
+                      "nome": {
+                        "type": "string",
+                        "example": "Mariana Rocha"
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno ao buscar usuários responsáveis"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Usuário Responsável"
+        ],
+        "summary": "Cria um novo usuário responsável",
+        "description": "Cria um novo usuário responsável no sistema",
+        "parameters": [
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Dados para criar um novo usuário responsável",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nome": {
+                  "type": "string",
+                  "example": "Leticia Barbosa"
+                }
+              },
+              "required": [
+                "nome"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Usuário responsável criado",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Usuário responsável criado com sucesso!"
+                },
+                "id": {
+                  "type": "number",
+                  "example": 3
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "500": {
+            "description": "Erro ao tentar criar o usuário responsável"
+          }
+        }
+      }
+    },
+    "/responsavel/id/{id}": {
+      "get": {
+        "tags": [
+          "Usuário Responsável"
+        ],
+        "summary": "Consulta usuário responsável por ID",
+        "description": "Consulta os detalhes de um usuário responsável específico pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID do usuário responsável",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso!",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total": {
+                  "type": "number",
+                  "example": 1
+                },
+                "item": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "nome": {
+                      "type": "string",
+                      "example": "Rafael Costa"
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Usuário responsável não encontrado"
+          },
+          "500": {
+            "description": "Erro interno ao tentar fazer a busca"
+          }
+        }
+      }
+    },
+    "/responsavel/{id}": {
+      "put": {
+        "tags": [
+          "Usuário Responsável"
+        ],
+        "summary": "Atualiza usuário responsável por ID",
+        "description": "Atualiza os dados de um usuário responsável específico pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID do usuário responsável",
+            "example": 1
+          },
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Dados para atualizar o usuário responsável",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nome": {
+                  "type": "string",
+                  "example": "Rafael Costa (Atualizado)"
+                }
+              },
+              "required": [
+                "nome"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Usuário responsável atualizado",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Usuário responsável atualizado com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Usuário responsável não encontrado"
+          },
+          "500": {
+            "description": "Erro ao tentar atualizar o usuário responsável"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Usuário Responsável"
+        ],
+        "summary": "Atualiza parcialmente usuário responsável por ID",
+        "description": "Atualiza parcialmente os dados de um usuário responsável específico pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID do usuário responsável",
+            "example": 1
+          },
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Dados para atualizar parcialmente o usuário responsável",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nome": {
+                  "type": "string",
+                  "example": "Leticia B."
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Usuário responsável atualizado",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Usuário responsável atualizado com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Usuário responsável não encontrado"
+          },
+          "500": {
+            "description": "Erro ao tentar atualizar o usuário responsável"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Usuário Responsável"
+        ],
+        "summary": "Deleta usuário responsável por ID",
+        "description": "Deleta um usuário responsável específico pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID do usuário responsável",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Usuário responsável deletado",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Usuário responsável deletado com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Usuário responsável não encontrado"
+          },
+          "500": {
+            "description": "Erro ao tentar deletar o usuário responsável"
+          }
+        }
+      }
+    },
     "/status": {
       "get": {
         "tags": [
@@ -1875,6 +3578,704 @@
           },
           "500": {
             "description": "Erro ao tentar deletar o status"
+          }
+        }
+      }
+    },
+    "/uf": {
+      "get": {
+        "tags": [
+          "UF"
+        ],
+        "summary": "Lista todas as UFs",
+        "description": "Retorna a lista completa de UFs cadastradas",
+        "responses": {
+          "200": {
+            "description": "Sucesso!",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total": {
+                  "type": "number",
+                  "example": 2
+                },
+                "ufs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "uf_id": {
+                        "type": "number",
+                        "example": 2
+                      },
+                      "uf_nome": {
+                        "type": "string",
+                        "example": "Rio de Janeiro"
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno ao buscar UFs"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "UF"
+        ],
+        "summary": "Cria uma nova UF",
+        "description": "Cria uma nova UF no sistema",
+        "parameters": [
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Dados para criar uma nova UF",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nome": {
+                  "type": "string",
+                  "example": "Minas Gerais"
+                }
+              },
+              "required": [
+                "nome"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "UF criada",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "UF criada com sucesso!"
+                },
+                "id": {
+                  "type": "number",
+                  "example": 1
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "500": {
+            "description": "Erro ao tentar criar a UF"
+          }
+        }
+      }
+    },
+    "/uf/id/{id}": {
+      "get": {
+        "tags": [
+          "UF"
+        ],
+        "summary": "Consulta UF por ID",
+        "description": "Consulta os detalhes de uma UF específica pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID da UF",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso!",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total": {
+                  "type": "number",
+                  "example": 1
+                },
+                "uf": {
+                  "type": "object",
+                  "properties": {
+                    "uf_id": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "uf_nome": {
+                      "type": "string",
+                      "example": "São Paulo"
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "UF não encontrada"
+          },
+          "500": {
+            "description": "Erro interno ao tentar fazer a busca"
+          }
+        }
+      }
+    },
+    "/uf/{id}": {
+      "put": {
+        "tags": [
+          "UF"
+        ],
+        "summary": "Atualiza UF por ID",
+        "description": "Atualiza os detalhes de uma UF específica pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID da UF",
+            "example": 1
+          },
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Dados para atualizar a UF",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nome": {
+                  "type": "string",
+                  "example": "São Paulo Atualizada"
+                }
+              },
+              "required": [
+                "nome"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "UF atualizada",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "UF atualizada com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "UF não encontrada"
+          },
+          "500": {
+            "description": "Erro ao tentar atualizar a UF"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "UF"
+        ],
+        "summary": "Atualiza parcialmente UF por ID",
+        "description": "Atualiza parcialmente os dados de uma UF específica pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID da UF",
+            "example": 1
+          },
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Dados para atualizar parcialmente a UF",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nome": {
+                  "type": "string",
+                  "example": "UF Parcialmente Atualizada"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "UF atualizada",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "UF atualizada com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "UF não encontrada"
+          },
+          "500": {
+            "description": "Erro ao tentar atualizar a UF"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "UF"
+        ],
+        "summary": "Deleta UF por ID",
+        "description": "Deleta uma UF específica pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID da UF",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "UF deletada",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "UF deletada com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "UF não encontrada"
+          },
+          "500": {
+            "description": "Erro ao tentar deletar a UF"
+          }
+        }
+      }
+    },
+    "/veiculo": {
+      "get": {
+        "tags": [
+          "Veículo"
+        ],
+        "summary": "Lista todos os veículos",
+        "description": "Retorna a lista completa de veículos cadastrados",
+        "responses": {
+          "200": {
+            "description": "Sucesso!",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total": {
+                  "type": "number",
+                  "example": 2
+                },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "number",
+                        "example": 2
+                      },
+                      "placa": {
+                        "type": "string",
+                        "example": "VLV9K33"
+                      },
+                      "modelo": {
+                        "type": "string",
+                        "example": "FH 540 6x4"
+                      },
+                      "marca": {
+                        "type": "string",
+                        "example": "Volvo"
+                      },
+                      "ano": {
+                        "type": "number",
+                        "example": 2022
+                      },
+                      "ativo": {
+                        "type": "string",
+                        "example": "S"
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno ao buscar veículos"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Veículo"
+        ],
+        "summary": "Cria um novo veículo",
+        "description": "Cria um novo veículo no sistema",
+        "parameters": [
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Dados para criar um novo veículo",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "placa": {
+                  "type": "string",
+                  "example": "MBZ5H21"
+                },
+                "modelo": {
+                  "type": "string",
+                  "example": "L-1620"
+                },
+                "marca": {
+                  "type": "string",
+                  "example": "Mercedes-Benz"
+                },
+                "ano": {
+                  "type": "number",
+                  "example": 2012
+                },
+                "ativo": {
+                  "type": "string",
+                  "example": "S"
+                }
+              },
+              "required": [
+                "placa",
+                "modelo",
+                "marca",
+                "ano"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Veículo criado",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Veículo criado com sucesso!"
+                },
+                "id": {
+                  "type": "number",
+                  "example": 3
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "500": {
+            "description": "Erro ao tentar criar o veículo"
+          }
+        }
+      }
+    },
+    "/veiculo/id/{id}": {
+      "get": {
+        "tags": [
+          "Veículo"
+        ],
+        "summary": "Consulta veículo por ID",
+        "description": "Consulta os detalhes de um veículo específico pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID do veículo",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso!",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total": {
+                  "type": "number",
+                  "example": 1
+                },
+                "item": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "placa": {
+                      "type": "string",
+                      "example": "MBZ5H21"
+                    },
+                    "modelo": {
+                      "type": "string",
+                      "example": "L-1620"
+                    },
+                    "marca": {
+                      "type": "string",
+                      "example": "Mercedes-Benz"
+                    },
+                    "ano": {
+                      "type": "number",
+                      "example": 2012
+                    },
+                    "ativo": {
+                      "type": "string",
+                      "example": "S"
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Veículo não encontrado"
+          },
+          "500": {
+            "description": "Erro interno ao tentar fazer a busca"
+          }
+        }
+      }
+    },
+    "/veiculo/{id}": {
+      "put": {
+        "tags": [
+          "Veículo"
+        ],
+        "summary": "Atualiza veículo por ID",
+        "description": "Atualiza os dados de um veículo específico pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID do veículo",
+            "example": 1
+          },
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Dados para atualizar o veículo",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "placa": {
+                  "type": "string",
+                  "example": "MBZ5H21"
+                },
+                "modelo": {
+                  "type": "string",
+                  "example": "L-1620"
+                },
+                "marca": {
+                  "type": "string",
+                  "example": "Mercedes-Benz"
+                },
+                "ano": {
+                  "type": "number",
+                  "example": 2013
+                },
+                "ativo": {
+                  "type": "string",
+                  "example": "S"
+                }
+              },
+              "required": [
+                "placa",
+                "modelo",
+                "marca",
+                "ano"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Veículo atualizado",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Veículo atualizado com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Veículo não encontrado"
+          },
+          "500": {
+            "description": "Erro ao tentar atualizar o veículo"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Veículo"
+        ],
+        "summary": "Atualiza parcialmente veículo por ID",
+        "description": "Atualiza parcialmente os dados de um veículo específico pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID do veículo",
+            "example": 1
+          },
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Dados para atualizar parcialmente o veículo",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "placa": {
+                  "type": "string",
+                  "example": "MBZ5H21"
+                },
+                "modelo": {
+                  "type": "string",
+                  "example": "L-1620"
+                },
+                "marca": {
+                  "type": "string",
+                  "example": "Mercedes-Benz"
+                },
+                "ano": {
+                  "type": "number",
+                  "example": 2014
+                },
+                "ativo": {
+                  "type": "string",
+                  "example": "N"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Veículo atualizado",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Veículo atualizado com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Veículo não encontrado"
+          },
+          "500": {
+            "description": "Erro ao tentar atualizar o veículo"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Veículo"
+        ],
+        "summary": "Deleta veículo por ID",
+        "description": "Deleta um veículo específico pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID do veículo",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Veículo deletado",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Veículo deletado com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Veículo não encontrado"
+          },
+          "500": {
+            "description": "Erro ao tentar deletar o veículo"
           }
         }
       }

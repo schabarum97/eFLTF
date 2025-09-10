@@ -1,4 +1,5 @@
 const db = require('../configs/pg')
+const { AgendamentoLivre, DEFAULT_DURATION_MIN } = require('../service/agendamento')
 
 const baseSelect = `
   SELECT
@@ -145,6 +146,16 @@ const postOrdem = async (params) => {
       }
     }
 
+    await AgendamentoLivre({
+      ord_id: null,
+      vei_id: params.vei_id ?? null,
+      ord_responsavel: params.usu_id ?? null,
+      end_id: params.end_id,
+      ord_data: params.data,
+      ord_hora: params.hora,
+      ord_duracao_min: params.ord_duracao_min ?? DEFAULT_DURATION_MIN
+    })
+
     const result = await db.query(sql_post, [
       cli_id, end_id, stt_id, observacao, data, hora, usu_id, vei_id
     ])
@@ -193,6 +204,16 @@ const putOrdem = async (params) => {
         throw { status: 400, message: 'Veículo informado não existe' }
       }
     }
+
+    await AgendamentoLivre({
+      ord_id: id,
+      vei_id: params.vei_id ?? null,
+      ord_responsavel: params.usu_id ?? null,
+      end_id: params.end_id,
+      ord_data: params.data,
+      ord_hora: params.hora,
+      ord_duracao_min: params.ord_duracao_min ?? DEFAULT_DURATION_MIN
+    })
 
     const result = await db.query(sql_put, [
       id, cli_id, end_id, stt_id, observacao, data, hora, usu_id, vei_id
@@ -289,6 +310,16 @@ const patchOrdem = async (params) => {
     if (fields.length === 0) {
       throw { status: 400, message: 'Nenhum campo para atualizar' }
     }
+
+    await AgendamentoLivre({
+      ord_id: id,
+      vei_id: params.vei_id ?? null,
+      ord_responsavel: params.usu_id ?? null,
+      end_id: params.end_id,
+      ord_data: params.data,
+      ord_hora: params.hora,
+      ord_duracao_min: params.ord_duracao_min ?? DEFAULT_DURATION_MIN
+    })
 
     const sql = `
       UPDATE t_ordem

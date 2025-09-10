@@ -9,6 +9,7 @@ const OrdemPag = require('./ordempag');
 const Dash = require('./dash');
 const Responsavel = require('./responsavel');
 const Veiculo = require('./veiculo');
+const Agendamento = require('./agendamento');
 
 module.exports = (app) => {
     Cliente(app),
@@ -21,5 +22,6 @@ module.exports = (app) => {
     OrdemPag(app), 
     Dash(app),
     Responsavel(app),
-    Veiculo(app)
+    Veiculo(app),
+    Agendamento(app)
 }
