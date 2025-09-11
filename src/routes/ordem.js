@@ -1,7 +1,8 @@
 const ordemController = require("../controllers/ordem");
+const checkPermission = require("../middleware/checkPermission");
 
 module.exports = (app) => {
-  app.get("/ordem", ordemController.getOrdens
+  app.get("/ordem", checkPermission.check, ordemController.getOrdens
     /*
         #swagger.tags = ["Ordem"]
         #swagger.summary = "Lista todas as ordens"
@@ -41,7 +42,7 @@ module.exports = (app) => {
     */
   );
 
-  app.get("/ordem/id/:id", ordemController.getById
+  app.get("/ordem/id/:id", checkPermission.check, ordemController.getById
     /*
         #swagger.tags = ["Ordem"]
         #swagger.summary = "Consulta ordem por ID"
@@ -89,7 +90,7 @@ module.exports = (app) => {
     */
   );
 
-  app.post("/ordem", ordemController.postOrdem
+  app.post("/ordem", checkPermission.check, ordemController.postOrdem
     /*
         #swagger.tags = ["Ordem"]
         #swagger.summary = "Cria uma nova ordem"
@@ -119,7 +120,7 @@ module.exports = (app) => {
     */
   );
 
-  app.put("/ordem/:id", ordemController.putOrdem
+  app.put("/ordem/:id", checkPermission.check, ordemController.putOrdem
     /*
         #swagger.tags = ["Ordem"]
         #swagger.summary = "Atualiza ordem por ID"
@@ -158,7 +159,7 @@ module.exports = (app) => {
     */
   );
 
-  app.patch("/ordem/:id", ordemController.patchOrdem
+  app.patch("/ordem/:id", checkPermission.check, ordemController.patchOrdem
     /*
         #swagger.tags = ["Ordem"]
         #swagger.summary = "Atualiza parcialmente ordem por ID"
@@ -192,7 +193,7 @@ module.exports = (app) => {
     */
   );
 
-  app.delete("/ordem/:id", ordemController.deleteOrdem
+  app.delete("/ordem/:id", checkPermission.check, ordemController.deleteOrdem
     /*
         #swagger.tags = ["Ordem"]
         #swagger.summary = "Deleta ordem por ID"

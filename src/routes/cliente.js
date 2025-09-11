@@ -1,7 +1,8 @@
 const clienteController = require("../controllers/cliente");
+const checkPermission = require("../middleware/checkPermission");
 
 module.exports = (app) => {
-  app.get("/cliente",  clienteController.getClientes
+  app.get("/cliente",  checkPermission.check, clienteController.getClientes
     /*
         #swagger.tags = ["Cliente"]
         #swagger.summary = "Lista todos os Clientes"
@@ -37,7 +38,7 @@ module.exports = (app) => {
     */
   );
 
-  app.get("/cliente/id/:id", clienteController.getById
+  app.get("/cliente/id/:id", checkPermission.check, clienteController.getById
     /*
         #swagger.tags = ["Cliente"]
         #swagger.summary = "Consulta Cliente por ID"
@@ -75,7 +76,7 @@ module.exports = (app) => {
     */
   );
 
-    app.post("/cliente", clienteController.postCliente
+    app.post("/cliente", checkPermission.check, clienteController.postCliente
     /* 
         #swagger.tags = ["Cliente"]
         #swagger.summary = "Cria um novo Cliente"
@@ -108,7 +109,7 @@ module.exports = (app) => {
     */
     );
 
-  app.put("/cliente/:id", clienteController.putCliente
+  app.put("/cliente/:id", checkPermission.check, clienteController.putCliente
     /*
         #swagger.tags = ["Cliente"]
         #swagger.summary = "Atualiza Cliente por ID"
@@ -150,7 +151,7 @@ module.exports = (app) => {
     */
   );
 
-  app.patch("/cliente/:id", clienteController.patchCliente
+  app.patch("/cliente/:id", checkPermission.check, clienteController.patchCliente
     /* 
         #swagger.tags = ["Cliente"]
         #swagger.summary = "Atualiza parcialmente Cliente por ID"
@@ -183,7 +184,7 @@ module.exports = (app) => {
     */
   );
 
-  app.delete("/cliente/:id", clienteController.deleteCliente
+  app.delete("/cliente/:id", checkPermission.check, clienteController.deleteCliente
     /*
         #swagger.tags = ["Cliente"]
         #swagger.summary = "Deleta Cliente por ID"

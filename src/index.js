@@ -1,12 +1,14 @@
 const express = require('express');
 const cors = require('cors')
 const app = express();
+const cookieParser = require('cookie-parser')
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser())
 const port = 3000;
 require('./service/swagger')
 
-let domains = process.env.APPLICATION_DOMAIN || ['http://localhost:9000']
+let domains = ['http://localhost:9000']
 
 const corsOptions = {
     origin: function (origin, callback) {

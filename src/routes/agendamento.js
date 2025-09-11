@@ -1,7 +1,8 @@
 const agendamentoController = require("../controllers/agendamento");
+const checkPermission = require("../middleware/checkPermission");
 
 module.exports = (app) => {
-  app.get("/agendamento/disponibilidade", agendamentoController.getDisponibilidadeVeiculos
+  app.get("/agendamento/disponibilidade", checkPermission.check, agendamentoController.getDisponibilidadeVeiculos
     /*
         #swagger.tags = ["Agendamento"]
         #swagger.summary = "Lista horários livres por veículo"

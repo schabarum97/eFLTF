@@ -1,8 +1,8 @@
-// routes/formapag.js
 const formaPagController = require("../controllers/formapag");
+const checkPermission = require("../middleware/checkPermission");
 
 module.exports = (app) => {
-  app.get("/formapag", formaPagController.getFormasPag
+  app.get("/formapag", checkPermission.check, formaPagController.getFormasPag
     /*
         #swagger.tags = ["Forma de Pagamento"]
         #swagger.summary = "Lista todas as formas de pagamento"
@@ -26,7 +26,7 @@ module.exports = (app) => {
     */
   );
 
-  app.get("/formapag/id/:id", formaPagController.getById
+  app.get("/formapag/id/:id", checkPermission.check, formaPagController.getById
     /*
         #swagger.tags = ["Forma de Pagamento"]
         #swagger.summary = "Consulta forma de pagamento por ID"
@@ -58,7 +58,7 @@ module.exports = (app) => {
     */
   );
 
-  app.post("/formapag", formaPagController.postFormaPag
+  app.post("/formapag", checkPermission.check, formaPagController.postFormaPag
     /*
         #swagger.tags = ["Forma de Pagamento"]
         #swagger.summary = "Cria uma nova forma de pagamento"
@@ -78,7 +78,7 @@ module.exports = (app) => {
     */
   );
 
-  app.put("/formapag/:id", formaPagController.putFormaPag
+  app.put("/formapag/:id", checkPermission.check, formaPagController.putFormaPag
     /*
         #swagger.tags = ["Forma de Pagamento"]
         #swagger.summary = "Atualiza forma de pagamento por ID"
@@ -108,7 +108,7 @@ module.exports = (app) => {
     */
   );
 
-  app.patch("/formapag/:id", formaPagController.patchFormaPag
+  app.patch("/formapag/:id", checkPermission.check, formaPagController.patchFormaPag
     /*
         #swagger.tags = ["Forma de Pagamento"]
         #swagger.summary = "Atualiza parcialmente forma de pagamento por ID"
@@ -136,7 +136,7 @@ module.exports = (app) => {
     */
   );
 
-  app.delete("/formapag/:id", formaPagController.deleteFormaPag
+  app.delete("/formapag/:id", checkPermission.check, formaPagController.deleteFormaPag
     /*
         #swagger.tags = ["Forma de Pagamento"]
         #swagger.summary = "Deleta forma de pagamento por ID"

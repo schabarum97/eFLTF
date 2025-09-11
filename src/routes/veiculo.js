@@ -1,7 +1,8 @@
 const veiculoController = require("../controllers/veiculo");
+const checkPermission = require("../middleware/checkPermission");
 
 module.exports = (app) => {
-  app.get("/veiculo", veiculoController.getVeiculos
+  app.get("/veiculo", checkPermission.check, veiculoController.getVeiculos
     /*
         #swagger.tags = ["Veículo"]
         #swagger.summary = "Lista todos os veículos"
@@ -21,7 +22,7 @@ module.exports = (app) => {
     */
   );
 
-  app.get("/veiculo/id/:id", veiculoController.getById
+  app.get("/veiculo/id/:id", checkPermission.check, veiculoController.getById
     /*
         #swagger.tags = ["Veículo"]
         #swagger.summary = "Consulta veículo por ID"
@@ -48,7 +49,7 @@ module.exports = (app) => {
     */
   );
 
-  app.post("/veiculo", veiculoController.postVeiculo
+  app.post("/veiculo", checkPermission.check, veiculoController.postVeiculo
     /*
         #swagger.tags = ["Veículo"]
         #swagger.summary = "Cria um novo veículo"
@@ -68,7 +69,7 @@ module.exports = (app) => {
     */
   );
 
-  app.put("/veiculo/:id", veiculoController.putVeiculo
+  app.put("/veiculo/:id", checkPermission.check, veiculoController.putVeiculo
     /*
         #swagger.tags = ["Veículo"]
         #swagger.summary = "Atualiza veículo por ID"
@@ -98,7 +99,7 @@ module.exports = (app) => {
     */
   );
 
-  app.patch("/veiculo/:id", veiculoController.patchVeiculo
+  app.patch("/veiculo/:id", checkPermission.check, veiculoController.patchVeiculo
     /*
         #swagger.tags = ["Veículo"]
         #swagger.summary = "Atualiza parcialmente veículo por ID"
@@ -126,7 +127,7 @@ module.exports = (app) => {
     */
   );
 
-  app.delete("/veiculo/:id", veiculoController.deleteVeiculo
+  app.delete("/veiculo/:id", checkPermission.check, veiculoController.deleteVeiculo
     /*
         #swagger.tags = ["Veículo"]
         #swagger.summary = "Deleta veículo por ID"

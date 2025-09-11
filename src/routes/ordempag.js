@@ -1,8 +1,8 @@
-// routes/ordpag.js
 const ordPagController = require("../controllers/ordempag");
+const checkPermission = require("../middleware/checkPermission");
 
 module.exports = (app) => {
-  app.get("/ordempag", ordPagController.getOrdPags
+  app.get("/ordempag", checkPermission.check, ordPagController.getOrdPags
     /*
         #swagger.tags = ["Pagamentos da OS"]
         #swagger.summary = "Lista todos os pagamentos de ordens de serviço"
@@ -35,7 +35,7 @@ module.exports = (app) => {
     */
   );
 
-  app.get("/ordempag/id/:id", ordPagController.getById
+  app.get("/ordempag/id/:id", checkPermission.check, ordPagController.getById
     /*
         #swagger.tags = ["Pagamentos da OS"]
         #swagger.summary = "Consulta pagamento por ID"
@@ -75,7 +75,7 @@ module.exports = (app) => {
     */
   );
 
-  app.post("/ordempag", ordPagController.postOrdPag
+  app.post("/ordempag", checkPermission.check, ordPagController.postOrdPag
     /*
         #swagger.tags = ["Pagamentos da OS"]
         #swagger.summary = "Cria novos pagamentos da OS"
@@ -104,7 +104,7 @@ module.exports = (app) => {
     */
   );
 
-  app.put("/ordempag/:id", ordPagController.putOrdPag
+  app.put("/ordempag/:id", checkPermission.check, ordPagController.putOrdPag
     /*
         #swagger.tags = ["Pagamentos da OS"]
         #swagger.summary = "Atualiza pagamento por ID"
@@ -138,7 +138,7 @@ module.exports = (app) => {
     */
   );
 
-  app.patch("/ordempag/:id", ordPagController.patchOrdPag
+  app.patch("/ordempag/:id", checkPermission.check, ordPagController.patchOrdPag
     /*
         #swagger.tags = ["Pagamentos da OS"]
         #swagger.summary = "Atualiza parcialmente pagamento por ID"
@@ -165,7 +165,7 @@ module.exports = (app) => {
     */
   );
 
-  app.delete("/ordempag/:id", ordPagController.deleteOrdPag
+  app.delete("/ordempag/:id", checkPermission.check, ordPagController.deleteOrdPag
     /*
         #swagger.tags = ["Pagamentos da OS"]
         #swagger.summary = "Deleta pagamento por ID"

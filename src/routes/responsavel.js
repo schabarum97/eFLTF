@@ -1,8 +1,8 @@
-// src/routes/usuresponsavel.js
 const responsavelController = require("../controllers/responsavel");
+const checkPermission = require("../middleware/checkPermission");
 
 module.exports = (app) => {
-  app.get("/responsavel", responsavelController.getResponsaveis
+  app.get("/responsavel", checkPermission.check, responsavelController.getResponsaveis
     /*
         #swagger.tags = ["Usuário Responsável"]
         #swagger.summary = "Lista todos os usuários responsáveis"
@@ -22,7 +22,7 @@ module.exports = (app) => {
     */
   );
 
-  app.get("/responsavel/id/:id", responsavelController.getById
+  app.get("/responsavel/id/:id", checkPermission.check, responsavelController.getById
     /*
         #swagger.tags = ["Usuário Responsável"]
         #swagger.summary = "Consulta usuário responsável por ID"
@@ -49,7 +49,7 @@ module.exports = (app) => {
     */
   );
 
-  app.post("/responsavel", responsavelController.postResponsavel
+  app.post("/responsavel", checkPermission.check, responsavelController.postResponsavel
     /*
         #swagger.tags = ["Usuário Responsável"]
         #swagger.summary = "Cria um novo usuário responsável"
@@ -69,7 +69,7 @@ module.exports = (app) => {
     */
   );
 
-  app.put("/responsavel/:id", responsavelController.putResponsavel
+  app.put("/responsavel/:id", checkPermission.check, responsavelController.putResponsavel
     /*
         #swagger.tags = ["Usuário Responsável"]
         #swagger.summary = "Atualiza usuário responsável por ID"
@@ -99,7 +99,7 @@ module.exports = (app) => {
     */
   );
 
-  app.patch("/responsavel/:id", responsavelController.patchResponsavel
+  app.patch("/responsavel/:id", checkPermission.check, responsavelController.patchResponsavel
     /*
         #swagger.tags = ["Usuário Responsável"]
         #swagger.summary = "Atualiza parcialmente usuário responsável por ID"
@@ -127,7 +127,7 @@ module.exports = (app) => {
     */
   );
 
-  app.delete("/responsavel/:id", responsavelController.deleteResponsavel
+  app.delete("/responsavel/:id", checkPermission.check, responsavelController.deleteResponsavel
     /*
         #swagger.tags = ["Usuário Responsável"]
         #swagger.summary = "Deleta usuário responsável por ID"

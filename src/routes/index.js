@@ -11,6 +11,8 @@ const Responsavel = require('./responsavel');
 const Veiculo = require('./veiculo');
 const Agendamento = require('./agendamento');
 const Report = require('./report');
+const Usuario = require('./usuario');
+const Login = require('./login');
 
 module.exports = (app) => {
     Cliente(app),
@@ -25,5 +27,7 @@ module.exports = (app) => {
     Responsavel(app),
     Veiculo(app),
     Agendamento(app),
-    Report(app)
+    Report(app),
+    Usuario(app),
+    Login(app)
 }

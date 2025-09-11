@@ -1,7 +1,8 @@
 const cidadeController = require("../controllers/cidade");
+const checkPermission = require("../middleware/checkPermission");
 
 module.exports = (app) => {
-  app.get("/cidade", cidadeController.getCidades
+  app.get("/cidade", checkPermission.check, cidadeController.getCidades
     /*
         #swagger.tags = ["Cidade"]
         #swagger.summary = "Lista todas as cidades"
@@ -21,7 +22,7 @@ module.exports = (app) => {
     */
   );
 
-  app.get("/cidade/id/:id", cidadeController.getById
+  app.get("/cidade/id/:id", checkPermission.check, cidadeController.getById
     /*
         #swagger.tags = ["Cidade"]
         #swagger.summary = "Consulta cidade por ID"
@@ -48,7 +49,7 @@ module.exports = (app) => {
     */
   );
 
-  app.post("/cidade", cidadeController.postCidade
+  app.post("/cidade", checkPermission.check, cidadeController.postCidade
     /*
         #swagger.tags = ["Cidade"]
         #swagger.summary = "Cria uma nova cidade"
@@ -69,7 +70,7 @@ module.exports = (app) => {
     */
   );
 
-  app.put("/cidade/:id", cidadeController.putCidade
+  app.put("/cidade/:id", checkPermission.check, cidadeController.putCidade
     /*
         #swagger.tags = ["Cidade"]
         #swagger.summary = "Atualiza cidade por ID"
@@ -100,7 +101,7 @@ module.exports = (app) => {
     */
   );
 
-  app.patch("/cidade/:id", cidadeController.patchCidade
+  app.patch("/cidade/:id", checkPermission.check, cidadeController.patchCidade
     /*
         #swagger.tags = ["Cidade"]
         #swagger.summary = "Atualiza parcialmente cidade por ID"
@@ -129,7 +130,7 @@ module.exports = (app) => {
     */
   );
 
-  app.delete("/cidade/:id", cidadeController.deleteCidade
+  app.delete("/cidade/:id", checkPermission.check, cidadeController.deleteCidade
     /*
         #swagger.tags = ["Cidade"]
         #swagger.summary = "Deleta cidade por ID"

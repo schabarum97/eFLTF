@@ -1,7 +1,8 @@
 const ufController = require("../controllers/uf");
+const checkPermission = require("../middleware/checkPermission");
 
 module.exports = (app) => {
-  app.get("/uf", ufController.getUfs
+  app.get("/uf", checkPermission.check, ufController.getUfs
     /*
         #swagger.tags = ["UF"]
         #swagger.summary = "Lista todas as UFs"
@@ -21,7 +22,7 @@ module.exports = (app) => {
     */
   );
 
-  app.get("/uf/id/:id", ufController.getById
+  app.get("/uf/id/:id", checkPermission.check, ufController.getById
     /*
         #swagger.tags = ["UF"]
         #swagger.summary = "Consulta UF por ID"
@@ -48,7 +49,7 @@ module.exports = (app) => {
     */
   );
 
-  app.post("/uf", ufController.postUf
+  app.post("/uf", checkPermission.check, ufController.postUf
     /*
         #swagger.tags = ["UF"]
         #swagger.summary = "Cria uma nova UF"
@@ -68,7 +69,7 @@ module.exports = (app) => {
     */
   );
 
-  app.put("/uf/:id", ufController.putUf
+  app.put("/uf/:id", checkPermission.check, ufController.putUf
     /*
         #swagger.tags = ["UF"]
         #swagger.summary = "Atualiza UF por ID"
@@ -98,7 +99,7 @@ module.exports = (app) => {
     */
   );
 
-  app.patch("/uf/:id", ufController.patchUf
+  app.patch("/uf/:id", checkPermission.check, ufController.patchUf
     /*
         #swagger.tags = ["UF"]
         #swagger.summary = "Atualiza parcialmente UF por ID"
@@ -126,7 +127,7 @@ module.exports = (app) => {
     */
   );
 
-  app.delete("/uf/:id", ufController.deleteUf
+  app.delete("/uf/:id", checkPermission.check, ufController.deleteUf
     /*
         #swagger.tags = ["UF"]
         #swagger.summary = "Deleta UF por ID"

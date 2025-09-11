@@ -1,8 +1,8 @@
-// src/routes/relatorioOrdemRoutes.js
 const reportController = require("../controllers/report.js");
+const checkPermission = require("../middleware/checkPermission");
 
 module.exports = (app) => {
-  app.get("/report/os/:id", reportController.getRelatorioOS
+  app.get("/report/os/:id", checkPermission.check, reportController.getRelatorioOS
     /*
         #swagger.tags = ["Relatórios"]
         #swagger.summary = "Dados do relatório de OS (view-model)"

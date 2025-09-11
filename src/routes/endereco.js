@@ -1,7 +1,8 @@
 const enderecoController = require("../controllers/endereco");
+const checkPermission = require("../middleware/checkPermission");
 
 module.exports = (app) => {
-  app.get("/endereco", enderecoController.getEnderecos
+  app.get("/endereco", checkPermission.check, enderecoController.getEnderecos
     /*
         #swagger.tags = ["Endereço"]
         #swagger.summary = "Lista todos os endereços"
@@ -35,7 +36,7 @@ module.exports = (app) => {
     */
   );
 
-  app.get("/endereco/id/:id", enderecoController.getById
+  app.get("/endereco/id/:id", checkPermission.check, enderecoController.getById
     /*
         #swagger.tags = ["Endereço"]
         #swagger.summary = "Consulta endereço por ID"
@@ -77,7 +78,7 @@ module.exports = (app) => {
     */
   );
 
-  app.post("/endereco", enderecoController.postEndereco
+  app.post("/endereco", checkPermission.check, enderecoController.postEndereco
     /*
         #swagger.tags = ["Endereço"]
         #swagger.summary = "Cria um novo endereço"
@@ -98,7 +99,7 @@ module.exports = (app) => {
     */
   );
 
-  app.put("/endereco/:id", enderecoController.putEndereco
+  app.put("/endereco/:id", checkPermission.check, enderecoController.putEndereco
     /*
         #swagger.tags = ["Endereço"]
         #swagger.summary = "Atualiza endereço por ID"
@@ -129,7 +130,7 @@ module.exports = (app) => {
     */
   );
 
-  app.patch("/endereco/:id", enderecoController.patchEndereco
+  app.patch("/endereco/:id", checkPermission.check, enderecoController.patchEndereco
     /*
         #swagger.tags = ["Endereço"]
         #swagger.summary = "Atualiza parcialmente endereço por ID"
@@ -158,7 +159,7 @@ module.exports = (app) => {
     */
   );
 
-  app.delete("/endereco/:id", enderecoController.deleteEndereco
+  app.delete("/endereco/:id", checkPermission.check, enderecoController.deleteEndereco
     /*
         #swagger.tags = ["Endereço"]
         #swagger.summary = "Deleta endereço por ID"

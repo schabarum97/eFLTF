@@ -1,8 +1,8 @@
-// src/routes/dash.js
 const dashController = require("../controllers/dash");
+const checkPermission = require("../middleware/checkPermission");
 
 module.exports = (app) => {
-  app.get("/dash/resumo", dashController.getResumo
+  app.get("/dash/resumo", checkPermission.check, dashController.getResumo
     /*
         #swagger.tags = ["Dashboard"]
         #swagger.summary = "Resumo geral (KPIs)"
@@ -22,7 +22,7 @@ module.exports = (app) => {
     */
   );
 
-  app.get("/dash/por-responsavel", dashController.getPorResponsavel
+  app.get("/dash/por-responsavel", checkPermission.check, dashController.getPorResponsavel
     /*
         #swagger.tags = ["Dashboard"]
         #swagger.summary = "OS por responsável"
@@ -42,7 +42,7 @@ module.exports = (app) => {
     */
   );
 
-  app.get("/dash/backlog-aging", dashController.getBacklogAging
+  app.get("/dash/backlog-aging", checkPermission.check, dashController.getBacklogAging
     /*
         #swagger.tags = ["Dashboard"]
         #swagger.summary = "Backlog por idade"
@@ -63,7 +63,7 @@ module.exports = (app) => {
     */
   );
 
-  app.get("/dash/hoje-amanha", dashController.getHojeEAmanha
+  app.get("/dash/hoje-amanha", checkPermission.check, dashController.getHojeEAmanha
     /*
         #swagger.tags = ["Dashboard"]
         #swagger.summary = "OS de hoje e amanhã"
@@ -98,7 +98,7 @@ module.exports = (app) => {
     */
   );
 
-  app.get("/dash/carga-dia-hora", dashController.getCargaDiaHora
+  app.get("/dash/carga-dia-hora", checkPermission.check, dashController.getCargaDiaHora
     /*
         #swagger.tags = ["Dashboard"]
         #swagger.summary = "Carga por dia/horário"
@@ -120,7 +120,7 @@ module.exports = (app) => {
     */
   );
 
-  app.get("/dash/pagamentos-recentes", dashController.getPagamentosRecentes
+  app.get("/dash/pagamentos-recentes", checkPermission.check, dashController.getPagamentosRecentes
     /*
         #swagger.tags = ["Dashboard"]
         #swagger.summary = "Pagamentos recentes"
