@@ -10,6 +10,7 @@ const Dash = require('./dash');
 const Responsavel = require('./responsavel');
 const Veiculo = require('./veiculo');
 const Agendamento = require('./agendamento');
+const Report = require('./report');
 
 module.exports = (app) => {
     Cliente(app),
@@ -23,5 +24,6 @@ module.exports = (app) => {
     Dash(app),
     Responsavel(app),
     Veiculo(app),
-    Agendamento(app)
+    Agendamento(app),
+    Report(app)
 }
