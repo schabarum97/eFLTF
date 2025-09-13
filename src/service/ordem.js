@@ -131,7 +131,6 @@ const postOrdem = async (params) => {
       throw { status: 400, message: 'Status informado não existe' }
     }
 
-    // Responsável (opcional)
     if (usu_id != null) {
       const vResp = await db.query('SELECT usu_id FROM t_usuresponsavel WHERE usu_id = $1', [usu_id])
       if (vResp.rows.length === 0) {
@@ -140,7 +139,7 @@ const postOrdem = async (params) => {
     }
 
     if (vei_id != null) {
-      const vVei = await db.query('SELECT vei_id FROM t_usuresponsavel WHERE vei_id = $1', [vei_id])
+      const vVei = await db.query('SELECT vei_id FROM t_veiculo WHERE vei_id = $1', [vei_id])
       if (vVei.rows.length === 0) {
         throw { status: 400, message: 'Veículo informado não existe' }
       }
@@ -311,15 +310,17 @@ const patchOrdem = async (params) => {
       throw { status: 400, message: 'Nenhum campo para atualizar' }
     }
 
-    await AgendamentoLivre({
-      ord_id: id,
-      vei_id: params.vei_id ?? null,
-      ord_responsavel: params.usu_id ?? null,
-      end_id: params.end_id,
-      ord_data: params.data,
-      ord_hora: params.hora,
-      ord_duracao_min: params.ord_duracao_min ?? DEFAULT_DURATION_MIN
-    })
+    if (params.stt_id === undefined) {
+      await AgendamentoLivre({
+        ord_id: id,
+        vei_id: params.vei_id ?? null,
+        ord_responsavel: params.usu_id ?? null,
+        end_id: params.end_id,
+        ord_data: params.data,
+        ord_hora: params.hora,
+        ord_duracao_min: params.ord_duracao_min ?? DEFAULT_DURATION_MIN
+      })
+  }
 
     const sql = `
       UPDATE t_ordem
@@ -353,11 +354,47 @@ const deleteOrdem = async (id) => {
   }
 }
 
+function apenasDigitos(s) { return String(s || '').replace(/\D+/g, '') }
+
+const TELEFONE_COL_DIGITOS = `
+  regexp_replace(
+    coalesce(cl.cli_ddi, '') || coalesce(cl.cli_ddd, '') || coalesce(cl.cli_fone, ''),
+    '\\D', '', 'g'
+  )
+`;
+
+const getOrdensPorTelefone = async ({ telefone, stt_ids = null }) => {
+  try {
+    const fone = apenasDigitos(telefone)
+    if (!fone) throw { status: 400, message: 'Telefone inválido' }
+
+    let sql = `
+      ${baseSelect}
+      WHERE ${TELEFONE_COL_DIGITOS} = $1
+    `;
+    const binds = [ fone ];
+
+    if (Array.isArray(stt_ids) && stt_ids.length > 0) {
+      sql += ` AND o.stt_id = ANY($2::int[])`;
+      binds.push(stt_ids);
+    }
+
+    sql += ` ORDER BY o.ord_data DESC NULLS LAST, o.ord_hora DESC NULLS LAST, o.ord_id DESC`;
+
+    const result = await db.query(sql, binds);
+    return { total: result.rows.length, items: result.rows };
+  } catch (err) {
+    if (err.status && err.message) throw err;
+    throw { status: 500, message: 'Erro ao buscar Ordens por telefone ' + err.message };
+  }
+};
+
 module.exports = {
   getOrdemById,
   getOrdens,
   postOrdem,
   putOrdem,
   patchOrdem,
-  deleteOrdem
+  deleteOrdem,
+  getOrdensPorTelefone
 }

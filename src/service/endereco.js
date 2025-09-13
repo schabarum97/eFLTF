@@ -50,6 +50,29 @@ const sql_delete = `
    WHERE end_id = $1
 RETURNING end_id AS id`;
 
+const sql_findUf = `SELECT uf_id FROM t_uf WHERE UPPER(uf_sigla) = UPPER($1) LIMIT 1`
+const sql_findCidade = `
+  SELECT cid_id FROM t_cidade
+  WHERE UPPER(cid_nome) = UPPER($1) AND uf_id = $2
+  LIMIT 1
+`
+const sql_findEndIgual = `
+  SELECT end_id AS id
+  FROM t_endercli
+  WHERE cli_id = $1
+    AND UPPER(cli_logradouro) = UPPER($2)
+    AND cli_numero = $3
+    AND UPPER(cli_bairro) = UPPER($4)
+    AND cli_cep = $5
+    AND cid_id = $6
+  LIMIT 1
+`
+const sql_insert = `
+  INSERT INTO t_endercli (cli_id, cid_id, cli_logradouro, cli_numero, cli_bairro, cli_cep, cli_endereco)
+  VALUES ($1, $2, $3, $4, $5, $6, $7)
+  RETURNING end_id AS id
+`
+
 const getEnderecoById = async (id) => {
   try {
     const result = await db.query(sql_getById, [id])
@@ -174,11 +197,33 @@ const deleteEndereco = async (id) => {
   }
 }
 
+const criarOuObterEndereco = async ({ cli_id, logradouro, numero, bairro, cidade, uf, cep, endereco }) => {
+  try {
+    const ufq = await db.query(sql_findUf, [uf])
+    if (!ufq.rows.length) throw { status: 400, message: 'UF não encontrada' }
+    const uf_id = ufq.rows[0].uf_id
+
+    const cid = await db.query(sql_findCidade, [cidade, uf_id])
+    if (!cid.rows.length) throw { status: 400, message: 'Cidade não encontrada para a UF, ou cidade informada não é de abrangencia da empresa' }
+    const cid_id = cid.rows[0].cid_id
+
+    const f = await db.query(sql_findEndIgual, [cli_id, endereco, numero, bairro, cep, cid_id])
+    if (f.rows.length) return { id: f.rows[0].id }
+
+    const ins = await db.query(sql_insert, [cli_id, cid_id, endereco, numero, bairro, cep, logradouro])
+    return { id: ins.rows[0].id }
+  } catch (err) {
+    if (err.status && err.message) throw err
+    throw { status: 500, message: 'Erro em endereço: ' + err.message }
+  }
+}
+
 module.exports = {
   getEnderecoById,
   getEnderecos,
   postEndereco,
   putEndereco,
   patchEndereco,
-  deleteEndereco
+  deleteEndereco,
+  criarOuObterEndereco
 }

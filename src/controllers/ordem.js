@@ -75,11 +75,29 @@ const deleteOrdem = async (req, res, next) => {
   }
 }
 
+const STT_ATIVOS = [1, 2, 5]
+const STT_REALIZADOS = [3]
+
+async function getPorTelefone(req, res) {
+  try {
+    const { telefone, categoria } = req.query
+    let stt_ids = null
+    if (categoria === 'ativos') stt_ids = STT_ATIVOS
+    else if (categoria === 'realizados') stt_ids = STT_REALIZADOS
+
+    const data = await ordemService.getOrdensPorTelefone({ telefone, stt_ids })
+    res.json(data)
+  } catch (err) {
+    res.status(err.status || 500).json({ message: err.message || 'Erro interno' })
+  }
+}
+
 module.exports = {
   getOrdens,
   getById,
   postOrdem,
   putOrdem,
   patchOrdem,
-  deleteOrdem
+  deleteOrdem,
+  getPorTelefone
 }

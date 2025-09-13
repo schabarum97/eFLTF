@@ -38,6 +38,19 @@ const sql_delete = `
    WHERE cli_id = $1
 RETURNING cli_id AS id`;
 
+const sql_findByPhone = `
+  SELECT cli_id AS id
+  FROM t_cliente
+  WHERE cli_ddi = $1 AND cli_ddd = $2 AND cli_fone = $3 and cli_cnpj = $4
+  LIMIT 1
+`
+
+const sql_insert = `
+  INSERT INTO t_cliente (cli_nome, cli_ddi, cli_ddd, cli_fone, cli_cnpj)
+  VALUES ($1, $2, $3, $4, $5)
+  RETURNING cli_id AS id
+`
+
 const getClienteById = async (id) => {
   try {
     const result = await db.query(sql_getById, [id])
@@ -152,11 +165,25 @@ const deleteCliente = async (id) => {
   }
 }
 
+const getOuCriarPorTelefone = async ({ nome, ddi, ddd, fone, cnpj }) => {
+  try {
+    const f = await db.query(sql_findByPhone, [ddi, ddd, fone, cnpj])
+    if (f.rows.length) return { id: f.rows[0].id }
+
+    const ins = await db.query(sql_insert, [nome, ddi, ddd, fone, cnpj])
+    return { id: ins.rows[0].id }
+  } catch (err) {
+    throw { status: 500, message: 'Erro em cliente: ' + err.message }
+  }
+}
+
+
 module.exports = {
   getClienteById,
   getClientes,
   postCliente,
   putCliente,
   patchCliente,
-  deleteCliente
+  deleteCliente,
+  getOuCriarPorTelefone 
 }

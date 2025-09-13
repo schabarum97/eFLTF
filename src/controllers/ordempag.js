@@ -77,11 +77,24 @@ const deleteOrdPag = async (req, res, next) => {
   }
 }
 
+async function getPorTelefone(req, res) {
+  try {
+    const { telefone, pago } = req.query // pago: 'S' ou 'N'
+    const data = await ordpService.getOrdPagsPorTelefone({ telefone, pago })
+    const total = await ordpService.getSomaOrdPagsPorTelefone({ telefone, pago })
+    res.json({ ...data, total })
+  } catch (err) {
+    res.status(err.status || 500).json({ message: err.message || 'Erro interno' })
+  }
+}
+
+
 module.exports = {
   getOrdPags,
   getById,
   postOrdPag,
   putOrdPag,
   patchOrdPag,
-  deleteOrdPag
+  deleteOrdPag,
+  getPorTelefone 
 }

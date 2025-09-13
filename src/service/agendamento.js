@@ -90,51 +90,47 @@ ORDER BY e.start_ts;
 const sql_disponibilidade = `
 WITH params AS (
   SELECT
-    $1::date      AS de,
-    $2::date      AS ate,
+    $1::date  AS de,
+    $2::date  AS ate,
     COALESCE($3, ${DEFAULT_DURATION_MIN})::int AS dur_min,
     COALESCE($4, ${DEFAULT_STEP_MIN})::int     AS step_min,
-    $5::bigint    AS p_vei_id
+    $5::bigint AS p_vei_id
 ),
 -- veículos ativos (todos ou 1)
 veiculos AS (
   SELECT v.vei_id, v.vei_placa, v.vei_modelo, v.vei_marca
   FROM t_veiculo v, params p
-  WHERE COALESCE(v.vei_ativo, 'S') = 'S'
+  WHERE COALESCE(v.vei_ativo,'S') = 'S'
     AND (p.p_vei_id IS NULL OR v.vei_id = p.p_vei_id)
 ),
--- janela global de consulta em timestamp
+frota AS (
+  SELECT COUNT(*)::int AS capacidade FROM veiculos
+),
+-- janela global
 janela AS (
   SELECT
-    (de)::timestamp                         AS ts_ini,
+    (de)::timestamp AS ts_ini,
     (ate + INTERVAL '1 day' - INTERVAL '1 second') AS ts_fim
   FROM params
 ),
--- OS existentes (não canceladas) dos veículos na janela +/- 1 dia (otimização)
-os_raw AS (
+
+-- OS já alocadas em veículo
+os_assigned AS (
   SELECT
-    o.ord_id,
-    o.vei_id,
-    o.ord_responsavel,
-    o.end_id,
-    o.ord_data,
-    o.ord_hora,
+    o.ord_id, o.vei_id, o.ord_responsavel, o.end_id, o.ord_data, o.ord_hora,
     COALESCE(o.ord_duracao_min, (SELECT dur_min FROM params)) AS dur_min,
-    e.cid_id,
-    c.cid_deslocamento,
-    s.stt_nome
+    e.cid_id, c.cid_deslocamento, s.stt_nome
   FROM t_ordem o
-  JOIN veiculos v ON v.vei_id = o.vei_id
-  JOIN t_endercli e ON e.end_id = o.end_id
-  JOIN t_cidade   c ON c.cid_id = e.cid_id
-  JOIN t_status   s ON s.stt_id = o.stt_id
-  JOIN params     p ON TRUE
-  WHERE UPPER(COALESCE(s.stt_nome,'')) <> 'CANCELADA'
+  JOIN veiculos v      ON v.vei_id = o.vei_id
+  JOIN t_endercli e    ON e.end_id = o.end_id
+  JOIN t_cidade c      ON c.cid_id = e.cid_id
+  JOIN t_status s      ON s.stt_id = o.stt_id
+  JOIN params p        ON TRUE
+  WHERE UPPER(COALESCE(s.stt_nome,'')) NOT IN ('CANCELADA','FINALIZADA')
     AND o.ord_data BETWEEN (p.de - INTERVAL '1 day')::date
-                       AND (p.ate + INTERVAL '1 day')::date
+                        AND (p.ate + INTERVAL '1 day')::date
 ),
--- transforma OS em intervalos ocupados com logística (estende antes/depois)
-occ AS (
+occ_assigned AS (
   SELECT
     r.vei_id,
     (r.ord_data::timestamp
@@ -146,19 +142,16 @@ occ AS (
                        mins  => split_part(r.ord_hora,':',2)::int)
        + (r.dur_min * INTERVAL '1 minute')
        + ((r.cid_deslocamento / 2) * INTERVAL '1 minute')) AS occ_end
-  FROM os_raw r
+  FROM os_assigned r
 ),
--- mescla sobreposições por veículo (interval merging)
 occ_ord AS (
   SELECT
-    o.vei_id,
-    o.occ_start,
-    o.occ_end,
+    o.vei_id, o.occ_start, o.occ_end,
     CASE
       WHEN o.occ_start <= LAG(o.occ_end) OVER (PARTITION BY o.vei_id ORDER BY o.occ_start)
       THEN 0 ELSE 1
     END AS is_new
-  FROM occ o
+  FROM occ_assigned o
   ORDER BY o.vei_id, o.occ_start
 ),
 occ_grp AS (
@@ -169,64 +162,123 @@ occ_grp AS (
   FROM occ_ord
 ),
 occ_merged AS (
-  SELECT
-    vei_id,
-    MIN(occ_start) AS occ_start,
-    MAX(occ_end)   AS occ_end
+  SELECT vei_id, MIN(occ_start) AS occ_start, MAX(occ_end) AS occ_end
   FROM occ_grp
   GROUP BY vei_id, grp
 ),
--- grade de candidatos por dia/hora no período (step_min)
-grid AS (
+-- OS de toda a frota (com OU sem veículo), para controlar capacidade
+os_all AS (
   SELECT
-    v.vei_id,
-    gs AS start_ts
-  FROM veiculos v
-  CROSS JOIN janela j
+    o.ord_id, o.vei_id, o.ord_responsavel, o.end_id, o.ord_data, o.ord_hora,
+    COALESCE(o.ord_duracao_min, (SELECT dur_min FROM params)) AS dur_min,
+    e.cid_id, c.cid_deslocamento, s.stt_nome
+  FROM t_ordem o
+  JOIN t_endercli e ON e.end_id = o.end_id
+  JOIN t_cidade   c ON c.cid_id = e.cid_id
+  JOIN t_status   s ON s.stt_id = o.stt_id
+  JOIN params     p ON TRUE
+  WHERE UPPER(COALESCE(s.stt_nome,'')) NOT IN ('CANCELADA','FINALIZADA')
+    AND o.ord_data BETWEEN (p.de - INTERVAL '1 day')::date
+                        AND (p.ate + INTERVAL '1 day')::date
+),
+occ_all AS (
+  SELECT
+    (r.ord_data::timestamp
+       + make_interval(hours => split_part(r.ord_hora,':',1)::int,
+                       mins  => split_part(r.ord_hora,':',2)::int)
+       - ((r.cid_deslocamento / 2) * INTERVAL '1 minute')) AS occ_start,
+    (r.ord_data::timestamp
+       + make_interval(hours => split_part(r.ord_hora,':',1)::int,
+                       mins  => split_part(r.ord_hora,':',2)::int)
+       + (r.dur_min * INTERVAL '1 minute')
+       + ((r.cid_deslocamento / 2) * INTERVAL '1 minute')) AS occ_end
+  FROM os_all r
+),
+--Grade de tempo BASE (sem veículo) para evitar multiplicação/duplicação por join
+grid_base AS (
+  SELECT gs AS start_ts
+  FROM janela j
   CROSS JOIN params p
   CROSS JOIN LATERAL generate_series(j.ts_ini, j.ts_fim, (p.step_min || ' minutes')::interval) AS gs
 ),
--- aplica regras de trabalho: seg–sáb 07–18; exclui domingo
-grid_work AS (
+grid_work_base AS (
   SELECT
-    g.vei_id,
-    g.start_ts,
-    (g.start_ts + (SELECT (dur_min || ' minutes')::interval FROM params)) AS end_ts
-  FROM grid g
+    gb.start_ts,
+    (gb.start_ts + (SELECT (dur_min || ' minutes')::interval FROM params)) AS end_ts
+  FROM grid_base gb
   JOIN params p ON TRUE
   WHERE
-    EXTRACT(DOW FROM g.start_ts)::int BETWEEN 1 AND 6 -- seg(1)..sáb(6)
-    AND to_char(g.start_ts, 'HH24:MI') >= '07:00'
-    AND (g.start_ts + (p.dur_min || ' minutes')::interval)
-        <= date_trunc('day', g.start_ts) + INTERVAL '18 hour'
-    -- NÃO permitir sobreposição com o intervalo de almoço 11:30–13:30
-    AND NOT (
-      (g.start_ts <  date_trunc('day', g.start_ts) + INTERVAL '13 hour 30 min')
-      AND (g.start_ts + (p.dur_min || ' minutes')::interval >
-           date_trunc('day', g.start_ts) + INTERVAL '11 hour 30 min')
+    -- seg(1) .. sáb(6)
+    EXTRACT(DOW FROM gb.start_ts)::int BETWEEN 1 AND 6
+    AND to_char(gb.start_ts, 'HH24:MI') >= '07:00'
+    AND (
+      /* Seg–Sex: até 18:00 e com bloqueio de almoço 11:30–13:30 */
+      (
+        EXTRACT(DOW FROM gb.start_ts)::int BETWEEN 1 AND 5
+        AND (gb.start_ts + (p.dur_min || ' minutes')::interval)
+            <= date_trunc('day', gb.start_ts) + INTERVAL '18 hour'
+        AND NOT (
+          (gb.start_ts <  date_trunc('day', gb.start_ts) + INTERVAL '13 hour 30 min')
+          AND (gb.start_ts + (p.dur_min || ' minutes')::interval >
+               date_trunc('day', gb.start_ts) + INTERVAL '11 hour 30 min')
+        )
+      )
+      /* Sábado: somente até 11:30 (sem precisar da regra de almoço) */
+      OR
+      (
+        EXTRACT(DOW FROM gb.start_ts)::int = 6
+        AND (gb.start_ts + (p.dur_min || ' minutes')::interval)
+            <= date_trunc('day', gb.start_ts) + INTERVAL '11 hour 30 min'
+      )
     )
 ),
--- remove candidatos que colidem com ocupação
+-- grade por VEÍCULO = veículos × grade_base
+grid_work_v AS (
+  SELECT v.vei_id, w.start_ts, w.end_ts
+  FROM veiculos v
+  CROSS JOIN grid_work_base w
+),
+-- remove candidatos que colidem com ocupação por VEÍCULO (já alocados)
 grid_free AS (
   SELECT gw.vei_id, gw.start_ts, gw.end_ts
-  FROM grid_work gw
+  FROM grid_work_v gw
   LEFT JOIN occ_merged o
     ON o.vei_id = gw.vei_id
    AND gw.start_ts < o.occ_end
    AND gw.end_ts   > o.occ_start
   WHERE o.vei_id IS NULL
+),
+-- capacidade total
+grid_cap AS (
+  SELECT
+    w.start_ts,
+    w.end_ts,
+    (SELECT COUNT(*) FROM occ_all o
+      WHERE w.start_ts < o.occ_end AND w.end_ts > o.occ_start) AS usados
+  FROM grid_work_base w
 )
 SELECT
   v.vei_id,
   v.vei_placa,
   v.vei_modelo,
   v.vei_marca,
-  gw.start_ts::timestamp AS inicio,
-  gw.end_ts::timestamp   AS fim
-FROM grid_free gw
-JOIN veiculos v ON v.vei_id = gw.vei_id
-ORDER BY v.vei_id, gw.start_ts;
+  gf.start_ts::timestamp AS inicio,
+  gf.end_ts::timestamp   AS fim
+FROM grid_free gf
+JOIN veiculos v ON v.vei_id = gf.vei_id
+JOIN grid_cap gc ON gc.start_ts = gf.start_ts AND gc.end_ts = gf.end_ts
+JOIN frota fr ON TRUE
+WHERE gc.usados < fr.capacidade
+ORDER BY v.vei_id, gf.start_ts;
 `
+
+function hhmm(ts) {
+  const d = (ts instanceof Date) ? ts : new Date(ts)
+  if (isNaN(d.getTime())) return null
+  const h = String(d.getHours()).padStart(2, '0')
+  const m = String(d.getMinutes()).padStart(2, '0')
+  return `${h}:${m}`
+}
 
 const getConflitosAgendamento = async (params) => {
   try {
@@ -305,10 +357,38 @@ const getDisponibilidadeVeiculos = async (params) => {
   }
 }
 
+const getHorariosDisponiveisPorData = async ({ data, duracao_min = DEFAULT_DURATION_MIN, step_min = DEFAULT_STEP_MIN } = {}) => {
+  try {
+    if (!data) {
+      throw { status: 400, message: 'Campo obrigatório: data.' }
+    }
+
+    const { items = [] } = await getDisponibilidadeVeiculos({
+      de: data,
+      ate: data,
+      duracao_min,
+      step_min
+    })
+
+    const set = new Set()
+    for (const r of items) {
+      const t = hhmm(r.inicio)
+      if (t) set.add(t)
+    }
+
+    const horarios = Array.from(set).sort() // 'HH:MM' já ordena
+    return { data, duracao_min, step_min, total: horarios.length, horarios }
+  } catch (err) {
+    if (err.status && err.message) throw err
+    throw { status: 500, message: 'Erro ao consultar horários por data: ' + err.message }
+  }
+}
+
 module.exports = {
   DEFAULT_DURATION_MIN,
   getConflitosAgendamento,
   validarAgendamento,
   AgendamentoLivre,
-  getDisponibilidadeVeiculos
+  getDisponibilidadeVeiculos,
+  getHorariosDisponiveisPorData
 }

@@ -13,6 +13,9 @@ const Agendamento = require('./agendamento');
 const Report = require('./report');
 const Usuario = require('./usuario');
 const Login = require('./login');
+const Wpp = require('./wpp');
+const Chatmock = require('./chatmock');
+const TipoLocal = require('./tipolocal')
 
 module.exports = (app) => {
     Cliente(app),
@@ -29,5 +32,8 @@ module.exports = (app) => {
     Agendamento(app),
     Report(app),
     Usuario(app),
-    Login(app)
+    Login(app), 
+    Wpp(app),
+    Chatmock(app),
+    TipoLocal(app)
 }

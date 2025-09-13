@@ -216,4 +216,5 @@ module.exports = (app) => {
         #swagger.responses[500] = { description: 'Erro ao tentar deletar a ordem' }
     */
   );
+  app.get('/ordens/por-telefone', ordemController.getPorTelefone);
 };

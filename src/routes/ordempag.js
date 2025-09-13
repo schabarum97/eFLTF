@@ -184,4 +184,5 @@ module.exports = (app) => {
         #swagger.responses[500] = { description: 'Erro ao tentar deletar o pagamento' }
     */
   );
+  app.get('/ordempag/por-telefone', ordPagController.getPorTelefone);
 };

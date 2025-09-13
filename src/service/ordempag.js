@@ -228,11 +228,77 @@ const deleteOrdPag = async (id) => {
   }
 }
 
+function apenasDigitos(s) { return String(s || '').replace(/\D+/g, '') }
+
+// DDI + DDD + FONE do cliente só com dígitos
+const TELEFONE_COL_DIGITOS = `
+  regexp_replace(
+    coalesce(cl.cli_ddi, '') || coalesce(cl.cli_ddd, '') || coalesce(cl.cli_fone, ''),
+    '\\D', '', 'g'
+  )
+`;
+
+const getOrdPagsPorTelefone = async ({ telefone, pago }) => {
+  try {
+    const fone = apenasDigitos(telefone)
+    if (!fone) throw { status: 400, message: 'Telefone inválido' }
+
+    let sql = `
+      ${baseSelect}
+      WHERE ${TELEFONE_COL_DIGITOS} = $1
+    `
+    const binds = [ fone ]
+
+    if (pago === 'S' || pago === 'N') {
+      sql += ` AND p.opg_pago = $2`
+      binds.push(pago)
+    }
+
+    sql += ` ORDER BY p.opg_vencimento DESC NULLS LAST, p.opg_id DESC`
+
+    const result = await db.query(sql, binds)
+    return { total: result.rows.length, items: result.rows }
+  } catch (err) {
+    if (err.status && err.message) throw err
+    throw { status: 500, message: 'Erro ao buscar Pagamentos por telefone ' + err.message }
+  }
+}
+
+/** Soma dos valores por telefone + pago/pendente */
+const getSomaOrdPagsPorTelefone = async ({ telefone, pago }) => {
+  try {
+    const fone = apenasDigitos(telefone)
+    if (!fone) throw { status: 400, message: 'Telefone inválido' }
+
+    let sql = `
+      SELECT COALESCE(SUM(p.opg_valor), 0) AS total
+      FROM t_ordpag p
+      JOIN t_ordem   o  ON p.ord_id = o.ord_id
+      JOIN t_cliente cl ON o.cli_id = cl.cli_id
+      WHERE ${TELEFONE_COL_DIGITOS} = $1
+    `
+    const binds = [ fone ]
+
+    if (pago === 'S' || pago === 'N') {
+      sql += ` AND p.opg_pago = $2`
+      binds.push(pago)
+    }
+
+    const result = await db.query(sql, binds)
+    return Number(result.rows[0]?.total || 0)
+  } catch (err) {
+    if (err.status && err.message) throw err
+    throw { status: 500, message: 'Erro ao somar Pagamentos por telefone ' + err.message }
+  }
+}
+
 module.exports = {
   getOrdPagById,
   getOrdPags,
   postOrdPag,
   putOrdPag,
   patchOrdPag,
-  deleteOrdPag
+  deleteOrdPag,
+  getOrdPagsPorTelefone,
+  getSomaOrdPagsPorTelefone
 }

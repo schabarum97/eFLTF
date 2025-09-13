@@ -128,6 +128,20 @@ CREATE INDEX IF NOT EXISTS idx_endercli_cid
   ON t_endercli (cid_id);
 
 
+CREATE TABLE IF NOT EXISTS t_tipolocal (
+  tpl_id           BIGSERIAL PRIMARY KEY,
+  tpl_nome         VARCHAR(80) NOT NULL,
+  tpl_valor        NUMERIC(12,2),                -- pode ser NULL (ex.: "Outro")
+  tpl_ativo        CHAR(1)    NOT NULL DEFAULT 'S'
+);
+
+INSERT INTO t_tipolocal (tpl_nome, tpl_valor, tpl_ativo) VALUES
+  ('Casa',               250.00, 'S'),
+  ('Prédio residencial', 650.00, 'S'),
+  ('Prédio comercial',   850.00, 'S'),
+  ('Prédio industrial', 1200.00, 'S'),
+  ('Outro',                NULL, 'S');
+
 INSERT INTO T_VEICULO (VEI_PLACA, VEI_MODELO, VEI_MARCA, VEI_ANO, VEI_ATIVO) VALUES
 ('MBZ5H21', 'L-1620',                 'Mercedes-Benz', 2012, 'S'),
 ('FOR2C90', 'Cargo 2429',             'Ford',          2017, 'S'),

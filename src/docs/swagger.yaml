@@ -2602,6 +2602,31 @@
         }
       }
     },
+    "/ordens/por-telefone": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "telefone",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "categoria",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Erro Interno do Servidor"
+          }
+        }
+      }
+    },
     "/ordempag": {
       "get": {
         "tags": [
@@ -3073,6 +3098,31 @@
           },
           "500": {
             "description": "Erro ao tentar deletar o pagamento"
+          }
+        }
+      }
+    },
+    "/ordempag/por-telefone": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "telefone",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "pago",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Erro Interno do Servidor"
           }
         }
       }
