@@ -71,6 +71,14 @@ CREATE TABLE IF NOT EXISTS T_STATUS (
    STT_COR VARCHAR(20) 
 );
 
+CREATE TABLE IF NOT EXISTS t_tipolocal (
+  tpl_id           BIGSERIAL PRIMARY KEY,
+  tpl_nome         VARCHAR(80) NOT NULL,
+  tpl_valor        NUMERIC(12,2),
+  tpl_ativo        CHAR(1)    NOT NULL DEFAULT 'S'
+);
+
+
 CREATE TABLE IF NOT EXISTS T_ORDEM (
     ORD_ID          BIGSERIAL  PRIMARY KEY,
     CLI_ID          BIGINT NOT NULL,
@@ -82,6 +90,7 @@ CREATE TABLE IF NOT EXISTS T_ORDEM (
     ORD_RESPONSAVEL BIGINT,
     VEI_ID          BIGINT,
     ord_duracao_min INTEGER DEFAULT 60,
+    tpl_id          BIGINT,
 
     CONSTRAINT FK_ORDEM_CLIENTE 
         FOREIGN KEY (CLI_ID) REFERENCES T_CLIENTE (CLI_ID),
@@ -92,7 +101,9 @@ CREATE TABLE IF NOT EXISTS T_ORDEM (
     CONSTRAINT FK_ORDEM_STATUS
         FOREIGN KEY (STT_ID) REFERENCES T_STATUS (STT_ID),    
     CONSTRAINT FK_ORDEM_VEICULO
-        FOREIGN KEY (VEI_ID) REFERENCES T_VEICULO (VEI_ID)   
+        FOREIGN KEY (VEI_ID) REFERENCES T_VEICULO (VEI_ID),
+    CONSTRAINT FK_ORDEM_TIPOLOCAL
+        FOREIGN KEY (TPL_ID) REFERENCES T_TIPOLOCAL (TPL_ID)      
 );
 
 CREATE TABLE IF NOT EXISTS T_FORMAPAG (
@@ -127,13 +138,6 @@ CREATE INDEX IF NOT EXISTS idx_endercli_end
 CREATE INDEX IF NOT EXISTS idx_endercli_cid
   ON t_endercli (cid_id);
 
-
-CREATE TABLE IF NOT EXISTS t_tipolocal (
-  tpl_id           BIGSERIAL PRIMARY KEY,
-  tpl_nome         VARCHAR(80) NOT NULL,
-  tpl_valor        NUMERIC(12,2),                -- pode ser NULL (ex.: "Outro")
-  tpl_ativo        CHAR(1)    NOT NULL DEFAULT 'S'
-);
 
 INSERT INTO t_tipolocal (tpl_nome, tpl_valor, tpl_ativo) VALUES
   ('Casa',               250.00, 'S'),
@@ -304,12 +308,13 @@ idx_days AS (
 ),
 cnt  AS (SELECT COUNT(*)::int AS n FROM idx_days),
 
--- usuários
+-- responsáveis
 u AS (
   SELECT row_number() OVER (ORDER BY usu_id) AS idx, usu_id
   FROM t_usuresponsavel
 ),
 cntu AS (SELECT COUNT(*)::int AS n FROM u),
+
 -- veículos ativos
 v AS (
   SELECT row_number() OVER (ORDER BY vei_id) AS idx, vei_id
@@ -317,8 +322,17 @@ v AS (
   WHERE COALESCE(vei_ativo, 'S') = 'S'
 ),
 cntv AS (SELECT COUNT(*)::int AS n FROM v),
+
+-- tipos de local (ajuste o filtro se houver campo de "ativo")
+t AS (
+  SELECT row_number() OVER (ORDER BY tpl_id) AS idx, tpl_id
+  FROM t_tipolocal
+),
+cntt AS (SELECT COUNT(*)::int AS n FROM t),
+
 -- quantidade de OS a gerar
 seq AS (SELECT generate_series(1, 100) AS n),
+
 base AS (
   SELECT
     s.n AS seq,
@@ -345,46 +359,55 @@ base AS (
       'Reagendar visita - acesso bloqueado ao pátio.'
     ])[ceil(random()*5)] AS ord_observacao,
 
-    u.usu_id,              -- responsável
-    v.vei_id,              -- veículo
-    60 AS ord_duracao_min
+    u.usu_id              AS ord_responsavel,
+    v.vei_id              AS vei_id,
+    60                    AS ord_duracao_min,
+    t.tpl_id              AS tpl_id
   FROM seq s
   CROSS JOIN cnt  c
   JOIN idx_days d
     ON d.idx = ((s.n - 1) % c.n) + 1
+
   CROSS JOIN cntu cu
   JOIN u
     ON u.idx = ((s.n - 1) % cu.n) + 1
+
   CROSS JOIN cntv cv
   JOIN v
     ON v.idx = ((s.n - 1) % cv.n) + 1
+
+  CROSS JOIN cntt ct
+  JOIN t
+    ON t.idx = ((s.n - 1) % ct.n) + 1
+
   CROSS JOIN LATERAL (
     SELECT CASE WHEN random() < 0.5 THEN 'M' ELSE 'T' END AS turno
-  ) t
+  ) tt
   CROSS JOIN LATERAL (
     SELECT CASE
-             WHEN t.turno = 'M' THEN (7  + floor(random()*4))::int   -- 7..10
-             ELSE                 (13 + floor(random()*5))::int   -- 13..17
+             WHEN tt.turno = 'M' THEN (7  + floor(random()*4))::int   -- 7..10
+             ELSE                   (13 + floor(random()*5))::int     -- 13..17
            END AS hr
   ) h
   CROSS JOIN LATERAL (
     SELECT CASE
              -- manhã: última hora (10) só até :30 para não cruzar 11:30
-             WHEN t.turno = 'M' AND h.hr = 10
+             WHEN tt.turno = 'M' AND h.hr = 10
                THEN (ARRAY[0,10,15,20,30])[ceil(random()*5)]
              -- tarde: primeira hora (13) a partir de :30 (não cair antes de 13:30)
-             WHEN t.turno = 'T' AND h.hr = 13
+             WHEN tt.turno = 'T' AND h.hr = 13
                THEN (ARRAY[30,40,45,50])[ceil(random()*4)]
              -- tarde: última hora (17) apenas :00 (para terminar 18:00)
-             WHEN t.turno = 'T' AND h.hr = 17
+             WHEN tt.turno = 'T' AND h.hr = 17
                THEN 0
              -- demais casos: minutos padrão
              ELSE (ARRAY[0,10,15,20,30,40,45,50])[ceil(random()*8)]
            END::int AS mm
   ) m
 )
+
 INSERT INTO t_ordem
-  (cli_id, end_id, stt_id, ord_responsavel, vei_id, ord_observacao, ord_data, ord_hora, ord_duracao_min)
+  (cli_id, end_id, stt_id, ord_responsavel, vei_id, ord_observacao, ord_data, ord_hora, ord_duracao_min, tpl_id)
 SELECT
   b.cli_id,
   (SELECT e.end_id
@@ -393,20 +416,21 @@ SELECT
     ORDER BY e.end_id
     LIMIT 1),
   s.stt_id,
-  b.usu_id,
+  b.ord_responsavel,
   b.vei_id,
   b.ord_observacao,
   b.ord_data,
   b.ord_hora,
-  b.ord_duracao_min
+  b.ord_duracao_min,
+  b.tpl_id
 FROM base b
 JOIN t_status s ON s.stt_nome = b.stt_nome;
-
 
 WITH ords AS (
   SELECT
     o.ord_id,
     o.ord_data,
+    o.tpl_id,
     e.cid_id,
     c.cid_deslocamento,
     s.stt_nome
@@ -420,8 +444,10 @@ WITH ords AS (
 choices AS (
   SELECT
     o.*,
+    -- forma de pagamento aleatória
     (ARRAY['DINHEIRO','CARTÃO DÉBITO','CARTÃO CRÉDITO','PIX','BOLETO'])[ceil(random()*5)] AS fpg_nome,
-    ROUND( (120 + (cid_deslocamento * (0.8 + random()*1.2)) + (random()*200))::numeric, 2 ) AS total_valor,
+    (SELECT tl.tpl_valor FROM t_tipolocal tl WHERE tl.tpl_id = o.tpl_id) AS total_valor
+    ,
     (floor(random()*26)::int - 5) AS venc_offset
   FROM ords o
 ),

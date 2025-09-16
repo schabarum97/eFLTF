@@ -25,7 +25,9 @@ const baseSelect = `
     us.usu_nome         AS responsavel_nome,
     o.vei_id            AS vei_id,
     v.vei_placa         AS veiculo_placa,
-    v.vei_modelo        AS veiculo_modelo
+    v.vei_modelo        AS veiculo_modelo, 
+    o.tpl_id            AS tpl_id,
+    tp.tpl_nome         AS tpl_nome
   FROM t_ordem o
   JOIN t_cliente   cl ON o.cli_id = cl.cli_id
   JOIN t_endercli  e  ON o.end_id = e.end_id
@@ -33,7 +35,9 @@ const baseSelect = `
   JOIN t_uf        uf ON c.uf_id  = uf.uf_id
   JOIN t_status    st ON o.stt_id = st.stt_id
   LEFT JOIN t_usuresponsavel us ON o.ord_responsavel = us.usu_id
-  LEFT JOIN t_veiculo v ON o.vei_id = v.vei_id`;
+  LEFT JOIN t_veiculo v ON o.vei_id = v.vei_id
+  LEFT JOIN t_tipolocal tp ON o.tpl_id = tp.tpl_id
+  `;
 const sql_getById = `
   ${baseSelect}
   WHERE o.ord_id = $1`;
@@ -44,8 +48,8 @@ const sql_getAll = `
 
 const sql_post = `
   INSERT INTO t_ordem (
-    cli_id, end_id, stt_id, ord_observacao, ord_data, ord_hora, ord_responsavel, vei_id) 
-  VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    cli_id, end_id, stt_id, ord_observacao, ord_data, ord_hora, ord_responsavel, vei_id, tpl_id) 
+  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
   RETURNING ord_id AS id`;
 
 const sql_put = `
@@ -57,7 +61,8 @@ const sql_put = `
          ord_data = $6,
          ord_hora = $7,
          ord_responsavel = $8,
-         vei_id = $9
+         vei_id = $9, 
+         tpl_id = $10
    WHERE ord_id = $1
 RETURNING ord_id AS id`;
 
@@ -104,7 +109,8 @@ const postOrdem = async (params) => {
       data = null,
       hora = null,
       usu_id = null,
-      vei_id = null
+      vei_id = null, 
+      tpl_id = null
     } = params
 
     // ===== validações de FK =====
@@ -145,6 +151,13 @@ const postOrdem = async (params) => {
       }
     }
 
+    if (tpl_id != null) {
+      const vLocal = await db.query('SELECT tpl_id FROM t_tipolocal WHERE tpl_id = $1', [tpl_id])
+      if (vLocal.rows.length === 0) {
+        throw { status: 400, message: 'Local informado informado não existe' }
+      }
+    }
+
     await AgendamentoLivre({
       ord_id: null,
       vei_id: params.vei_id ?? null,
@@ -156,7 +169,7 @@ const postOrdem = async (params) => {
     })
 
     const result = await db.query(sql_post, [
-      cli_id, end_id, stt_id, observacao, data, hora, usu_id, vei_id
+      cli_id, end_id, stt_id, observacao, data, hora, usu_id, vei_id, tpl_id
     ])
     return { mensagem: 'Ordem criada com sucesso!', id: result.rows[0].id }
   } catch (err) {
@@ -176,7 +189,8 @@ const putOrdem = async (params) => {
       data = null,
       hora = null,
       usu_id = null,
-      vei_id = null
+      vei_id = null, 
+      tpl_id = null
     } = params
 
     // ===== validações de FK =====
@@ -204,6 +218,13 @@ const putOrdem = async (params) => {
       }
     }
 
+    if (tpl_id != null) {
+      const vLocal = await db.query('SELECT tpl_id FROM t_tipolocal WHERE tpl_id = $1', [tpl_id])
+      if (vLocal.rows.length === 0) {
+        throw { status: 400, message: 'Local informado informado não existe' }
+      }
+    }    
+
     await AgendamentoLivre({
       ord_id: id,
       vei_id: params.vei_id ?? null,
@@ -215,7 +236,7 @@ const putOrdem = async (params) => {
     })
 
     const result = await db.query(sql_put, [
-      id, cli_id, end_id, stt_id, observacao, data, hora, usu_id, vei_id
+      id, cli_id, end_id, stt_id, observacao, data, hora, usu_id, vei_id, tpl_id
     ])
     if (result.rows.length === 0) {
       throw new Error('Ordem não encontrada')
@@ -295,6 +316,20 @@ const patchOrdem = async (params) => {
         binds.push(params.vei_id)
       }
     }
+
+    if (params.tpl_id !== undefined) {
+      if (params.tpl_id === null) {
+        count++
+        fields.push(`tpl_id = $${count}`)
+        binds.push(null)
+      } else {
+        const vVei = await db.query('SELECT tpl_id FROM t_tipolocal WHERE tpl_id = $1', [params.tpl_id])
+        if (vVei.rows.length === 0) throw { status: 400, message: 'Local informado informado não existe' }
+        count++
+        fields.push(`tpl_id = $${count}`)
+        binds.push(params.tpl_id)
+      }
+    }    
 
     if (params.observacao !== undefined) {
       count++; fields.push(`ord_observacao = $${count}`); binds.push(params.observacao)

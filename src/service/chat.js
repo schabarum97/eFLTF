@@ -1260,7 +1260,8 @@ async function tratarMensagem({ de, nome, texto, enviar }) {
           hora: horaHHMM,
           usu_id: null,
           vei_id: null,
-          ord_duracao_min: agService.DEFAULT_DURATION_MIN
+          ord_duracao_min: agService.DEFAULT_DURATION_MIN, 
+          tpl_id: tipoLocal.id
         })
 
         // Pagamentos
