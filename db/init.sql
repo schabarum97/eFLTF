@@ -91,6 +91,7 @@ CREATE TABLE IF NOT EXISTS T_ORDEM (
     VEI_ID          BIGINT,
     ord_duracao_min INTEGER DEFAULT 60,
     tpl_id          BIGINT,
+    ORD_WPP         CHAR(1)    NOT NULL DEFAULT 'S',
 
     CONSTRAINT FK_ORDEM_CLIENTE 
         FOREIGN KEY (CLI_ID) REFERENCES T_CLIENTE (CLI_ID),
@@ -407,7 +408,7 @@ base AS (
 )
 
 INSERT INTO t_ordem
-  (cli_id, end_id, stt_id, ord_responsavel, vei_id, ord_observacao, ord_data, ord_hora, ord_duracao_min, tpl_id)
+  (cli_id, end_id, stt_id, ord_responsavel, vei_id, ord_observacao, ord_data, ord_hora, ord_duracao_min, tpl_id, ord_wpp)
 SELECT
   b.cli_id,
   (SELECT e.end_id
@@ -422,7 +423,7 @@ SELECT
   b.ord_data,
   b.ord_hora,
   b.ord_duracao_min,
-  b.tpl_id
+  b.tpl_id, 'N'
 FROM base b
 JOIN t_status s ON s.stt_nome = b.stt_nome;
 

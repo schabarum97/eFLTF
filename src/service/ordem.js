@@ -1,6 +1,13 @@
 const db = require('../configs/pg')
 const { AgendamentoLivre, DEFAULT_DURATION_MIN } = require('../service/agendamento')
 
+const TELEFONE_COL_DIGITOS = `
+  regexp_replace(
+    coalesce(cl.cli_ddi, '') || coalesce(cl.cli_ddd, '') || coalesce(cl.cli_fone, ''),
+    '\\D', '', 'g'
+  )
+`;
+
 const baseSelect = `
   SELECT
     o.ord_id            AS id,
@@ -27,7 +34,8 @@ const baseSelect = `
     v.vei_placa         AS veiculo_placa,
     v.vei_modelo        AS veiculo_modelo, 
     o.tpl_id            AS tpl_id,
-    tp.tpl_nome         AS tpl_nome
+    tp.tpl_nome         AS tpl_nome, 
+    o.ord_wpp           AS ord_wpp
   FROM t_ordem o
   JOIN t_cliente   cl ON o.cli_id = cl.cli_id
   JOIN t_endercli  e  ON o.end_id = e.end_id
@@ -46,10 +54,31 @@ const sql_getAll = `
   ${baseSelect}
   ORDER BY o.ord_id ASC`;
 
+const sql_getMsgInfo = `
+  SELECT
+    o.ord_id,
+    ${TELEFONE_COL_DIGITOS} AS fone_digitos,
+    cl.cli_nome,
+    COALESCE(to_char(o.ord_data, 'DD/MM/YYYY'), '') AS data_fmt,
+    CASE
+      WHEN o.ord_hora ~ '^[0-9]{1,2}:[0-9]{1,2}(:[0-9]{2})?$'
+        THEN lpad(split_part(o.ord_hora, ':', 1), 2, '0')
+             || ':' ||
+             lpad(split_part(o.ord_hora, ':', 2), 2, '0')
+      ELSE ''
+    END AS hora_fmt,
+    st2.stt_nome AS novo_status
+  FROM t_ordem o
+  JOIN t_cliente cl ON o.cli_id = cl.cli_id
+  JOIN t_status  st2 ON st2.stt_id = $2
+  WHERE o.ord_id = $1
+  LIMIT 1
+`;
+
 const sql_post = `
   INSERT INTO t_ordem (
-    cli_id, end_id, stt_id, ord_observacao, ord_data, ord_hora, ord_responsavel, vei_id, tpl_id) 
-  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    cli_id, end_id, stt_id, ord_observacao, ord_data, ord_hora, ord_responsavel, vei_id, tpl_id, ord_wpp) 
+  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
   RETURNING ord_id AS id`;
 
 const sql_put = `
@@ -74,6 +103,15 @@ const sql_delete = `
   DELETE FROM t_ordem
    WHERE ord_id = $1
 RETURNING ord_id AS id`;
+
+function normObs(s) {
+  return String(s ?? '').trim().replace(/\s+/g, ' ')
+}
+
+function trunc(s, n = 500) {
+  s = String(s ?? '')
+  return s.length > n ? s.slice(0, n - 1) + '…' : s
+}
 
 const getOrdemById = async (id) => {
   try {
@@ -110,7 +148,8 @@ const postOrdem = async (params) => {
       hora = null,
       usu_id = null,
       vei_id = null, 
-      tpl_id = null
+      tpl_id = null, 
+      ord_wpp = 'N'
     } = params
 
     // ===== validações de FK =====
@@ -169,7 +208,7 @@ const postOrdem = async (params) => {
     })
 
     const result = await db.query(sql_post, [
-      cli_id, end_id, stt_id, observacao, data, hora, usu_id, vei_id, tpl_id
+      cli_id, end_id, stt_id, observacao, data, hora, usu_id, vei_id, tpl_id, ord_wpp
     ])
     return { mensagem: 'Ordem criada com sucesso!', id: result.rows[0].id }
   } catch (err) {
@@ -355,7 +394,54 @@ const patchOrdem = async (params) => {
         ord_hora: params.hora,
         ord_duracao_min: params.ord_duracao_min ?? DEFAULT_DURATION_MIN
       })
-  }
+   } else {
+      try {
+        // 1) Determinar se ord_wpp = S
+        const ret = await db.query('SELECT ord_wpp, ord_observacao FROM t_ordem WHERE ord_id = $1', [id])
+        if (!ret.rows.length) throw new Error('Ordem não encontrada para verificação de ord_wpp')
+        ordWppFlag = ret.rows[0].ord_wpp
+        ObsAtual = ret.rows[0].ord_observacao
+
+        if (String(ordWppFlag || '').toUpperCase() === 'S') {
+          const info = await db.query(sql_getMsgInfo, [id, params.stt_id])
+          if (info.rows.length) {
+            const { fone_digitos, cli_nome, data_fmt, hora_fmt, novo_status } = info.rows[0]
+            const jid = toJid(fone_digitos)
+
+            if (jid) {
+              const { sendText } = require('../wpp')
+              let obsLinha = null
+              if (params.observacao !== undefined) {
+                const mudouObs = normObs(params.observacao) !== normObs(ObsAtual)
+                if (mudouObs) {
+                  obsLinha = `📝 Observação: ${trunc(params.observacao)}`
+                }
+              }
+
+              const quando = (data_fmt && hora_fmt)
+                ? `${data_fmt} às ${hora_fmt}`
+                : (data_fmt || '').trim()
+
+              const msg = [
+                `Olá, ${cli_nome}! 👋`,
+                `Sua OS #${id} teve o status atualizado para **${novo_status}**.`,
+                quando ? `📅 Quando: ${quando}` : null,
+                obsLinha,
+                `Se precisar de algo, responda esta mensagem.`
+              ].filter(Boolean).join('\n')
+
+              sendText(jid, msg).catch(e => {
+                console.error('[WPP][patchOrdem] falha ao enviar WhatsApp:', e)
+              })
+            } else {
+              console.warn('[WPP][patchOrdem] telefone inválido/ausente para OS', id)
+            }
+          }
+        }
+      } catch (e) {
+        console.error('[WPP][patchOrdem] erro no fluxo de disparo:', e)
+      }
+   }
 
     const sql = `
       UPDATE t_ordem
@@ -391,12 +477,11 @@ const deleteOrdem = async (id) => {
 
 function apenasDigitos(s) { return String(s || '').replace(/\D+/g, '') }
 
-const TELEFONE_COL_DIGITOS = `
-  regexp_replace(
-    coalesce(cl.cli_ddi, '') || coalesce(cl.cli_ddd, '') || coalesce(cl.cli_fone, ''),
-    '\\D', '', 'g'
-  )
-`;
+function toJid (digits) {
+  const f = apenasDigitos(digits)
+  if (!f) return null
+  return `${f}@c.us`
+}
 
 const getOrdensPorTelefone = async ({ telefone, stt_ids = null }) => {
   try {

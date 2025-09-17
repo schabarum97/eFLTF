@@ -1,4 +1,3 @@
-// src/wpp.js
 const fs = require('fs')
 const path = require('path')
 const puppeteer = require('puppeteer')
@@ -200,7 +199,6 @@ function initClient(broadcast) {
 
   ;(async () => {
     try {
-      // atualização final de previsão antes de subir
       broadcastExpectQr(broadcast, forceQrNextInit || !hasSavedSession())
       cleanChromiumLocks(LA_USER_DATA_DIR)
       await client.initialize()
@@ -259,4 +257,82 @@ function getReconnectState() {
   return { enabled: reconnect.enabled, attempt: reconnect.attempt }
 }
 
-module.exports = { initClient, getStatus, getLastQr, disconnect, setAutoReconnect, getReconnectState }
+function onlyDigits(s){ return String(s||'').replace(/\D+/g,'') }
+
+function MontaNumero(digits) {
+  let d = onlyDigits(digits)
+
+  // garante DDI 55 no início (se já vier, mantém)
+  if (!d.startsWith('55')) d = '55' + d
+
+  // remove "0" de tronco após DDI se existir (ex.: 55049... -> 5549...)
+  if (d.startsWith('550')) d = '55' + d.slice(3)
+
+  const base = d
+  const afterDdi = d.slice(2)         // DDD + numero
+  const ddd = afterDdi.slice(0, 2)
+  const num = afterDdi.slice(2)
+
+  const cands = new Set()
+  cands.add(base)
+
+  if (/^\d{2}\d{8,9}$/.test(afterDdi)) {
+    if (num.length === 8) {
+      // pode ser fixo OU móvel antigo; testa versão com 9 também
+      cands.add('55' + ddd + '9' + num)
+    } else if (num.length === 9 && num.startsWith('9')) {
+      // móvel; testa sem o 9 caso o cadastro antigo exista sem ele
+      cands.add('55' + ddd + num.slice(1))
+    }
+  }
+
+  return Array.from(cands)
+}
+
+async function resolveJid(c, raw) {
+  const candidates = MontaNumero(raw)
+  for (const msisdn of candidates) {
+    try {
+      const wid = await c.getNumberId(msisdn) // retorna { _serialized: '5511...@c.us' } se existe
+      if (wid && wid._serialized) return wid._serialized
+    } catch (_) {}
+  }
+  return null
+}
+
+function AguardandoConexao(c, { timeoutMs = 30000 } = {}) {
+  if (status === 'ready') return Promise.resolve()
+  return new Promise((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error('WPP não ficou ready a tempo')), timeoutMs)
+    c.once('ready', () => { clearTimeout(t); resolve() })
+  })
+}
+
+async function sendText(to, text) {
+  if (!text || !String(text).trim()) throw new Error('texto vazio')
+  const c = initClient()
+  await AguardandoConexao(c)
+
+  const active = onlyDigits(c.info?.wid?._serialized)
+  const expected = onlyDigits(process.env.WPP_SENDER || '')
+  if (expected && active && !active.endsWith(expected)) {
+    throw new Error(`Conta WPP pareada não confere. Ativo=${active}, Esperado=${expected}`)
+  }
+
+  let raw = String(to).trim()
+  let jid = null
+
+  if (/@g\.us$/i.test(raw)) {
+    jid = raw
+  } else {
+    const digits = raw.includes('@') ? onlyDigits(raw.split('@')[0]) : onlyDigits(raw)
+    if (!digits) throw new Error('destino inválido (sem dígitos)')
+    jid = await resolveJid(c, digits)  // usa getNumberId + heurística BR com/sem 9
+    if (!jid) throw new Error('Número não encontrado no WhatsApp (confira DDI/DDD e 9º dígito)')
+  }
+
+  const msg = await c.sendMessage(jid, text)
+  return { id: msg.id.id, to: jid, from: c.info?.wid?._serialized }
+}
+
+module.exports = { initClient, getStatus, getLastQr, disconnect, setAutoReconnect, getReconnectState, sendText }

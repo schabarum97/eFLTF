@@ -1251,6 +1251,7 @@ async function tratarMensagem({ de, nome, texto, enviar }) {
         })
 
         // Ordem
+        ord_wpp = 'S'
         const { id: ord_id } = await ordemService.postOrdem({
           cli_id,
           end_id,
@@ -1261,7 +1262,8 @@ async function tratarMensagem({ de, nome, texto, enviar }) {
           usu_id: null,
           vei_id: null,
           ord_duracao_min: agService.DEFAULT_DURATION_MIN, 
-          tpl_id: tipoLocal.id
+          tpl_id: tipoLocal.id, 
+          ord_wpp
         })
 
         // Pagamentos
