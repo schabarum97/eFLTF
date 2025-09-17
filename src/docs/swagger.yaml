@@ -3797,6 +3797,431 @@
         }
       }
     },
+    "/tipolocal": {
+      "get": {
+        "tags": [
+          "Tipo de Local"
+        ],
+        "summary": "Lista todos os Tipos de Local",
+        "description": "Retorna a lista completa de tipos de local cadastrados",
+        "responses": {
+          "200": {
+            "description": "Sucesso!",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total": {
+                  "type": "number",
+                  "example": 2
+                },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "number",
+                        "example": 2
+                      },
+                      "nome": {
+                        "type": "string",
+                        "example": "Prédio residencial"
+                      },
+                      "valor": {
+                        "type": "number",
+                        "example": 650
+                      },
+                      "ativo": {
+                        "type": "string",
+                        "example": "S"
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "500": {
+            "description": "Erro interno ao buscar tipos de local"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Tipo de Local"
+        ],
+        "summary": "Cria um novo Tipo de Local",
+        "description": "Cria um novo Tipo de Local no sistema",
+        "parameters": [
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Dados para criar um novo Tipo de Local",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nome": {
+                  "type": "string",
+                  "example": "Casa"
+                },
+                "valor": {
+                  "type": "number",
+                  "example": 250
+                },
+                "ativo": {
+                  "type": "string",
+                  "example": "S"
+                }
+              },
+              "required": [
+                "nome"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Criado",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Tipo de local criado com sucesso!"
+                },
+                "id": {
+                  "type": "number",
+                  "example": 1
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "409": {
+            "description": "Conflito (nome já existente)"
+          },
+          "500": {
+            "description": "Erro ao tentar criar o Tipo de Local"
+          }
+        }
+      }
+    },
+    "/tipolocal/ativos": {
+      "get": {
+        "tags": [
+          "Tipo de Local"
+        ],
+        "summary": "Lista Tipos de Local Ativos",
+        "description": "Retorna somente os tipos de local com tpl_ativo = S",
+        "responses": {
+          "200": {
+            "description": "Sucesso!",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total": {
+                  "type": "number",
+                  "example": 2
+                },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "number",
+                        "example": 3
+                      },
+                      "nome": {
+                        "type": "string",
+                        "example": "Prédio comercial"
+                      },
+                      "valor": {
+                        "type": "number",
+                        "example": 850
+                      },
+                      "ativo": {
+                        "type": "string",
+                        "example": "S"
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "500": {
+            "description": "Erro interno ao buscar tipos de local ativos"
+          }
+        }
+      }
+    },
+    "/tipolocal/id/{id}": {
+      "get": {
+        "tags": [
+          "Tipo de Local"
+        ],
+        "summary": "Consulta Tipo de Local por ID",
+        "description": "Consulta os detalhes de um Tipo de Local específico pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID do Tipo de Local",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso!",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total": {
+                  "type": "number",
+                  "example": 1
+                },
+                "item": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "nome": {
+                      "type": "string",
+                      "example": "Casa"
+                    },
+                    "valor": {
+                      "type": "number",
+                      "example": 250
+                    },
+                    "ativo": {
+                      "type": "string",
+                      "example": "S"
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Tipo de local não encontrado"
+          },
+          "500": {
+            "description": "Erro interno ao tentar fazer a busca"
+          }
+        }
+      }
+    },
+    "/tipolocal/{id}": {
+      "put": {
+        "tags": [
+          "Tipo de Local"
+        ],
+        "summary": "Atualiza Tipo de Local por ID",
+        "description": "Atualiza os detalhes de um Tipo de Local específico pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID do Tipo de Local",
+            "example": 1
+          },
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Dados para atualizar o Tipo de Local",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nome": {
+                  "type": "string",
+                  "example": "Casa"
+                },
+                "valor": {
+                  "type": "number",
+                  "example": 260
+                },
+                "ativo": {
+                  "type": "string",
+                  "example": "S"
+                }
+              },
+              "required": [
+                "nome"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Atualizado",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Tipo de local atualizado com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Tipo de local não encontrado"
+          },
+          "409": {
+            "description": "Conflito (nome já existente)"
+          },
+          "500": {
+            "description": "Erro ao tentar atualizar o Tipo de Local"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Tipo de Local"
+        ],
+        "summary": "Atualiza parcialmente Tipo de Local por ID",
+        "description": "Atualiza parcialmente os dados de um Tipo de Local específico pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID do Tipo de Local",
+            "example": 1
+          },
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Campos para atualizar parcialmente",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "valor": {
+                  "type": "number",
+                  "example": 300
+                },
+                "ativo": {
+                  "type": "string",
+                  "example": "N"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Atualizado",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Tipo de local atualizado com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Tipo de local não encontrado"
+          },
+          "409": {
+            "description": "Conflito (nome já existente)"
+          },
+          "500": {
+            "description": "Erro ao tentar atualizar o Tipo de Local"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Tipo de Local"
+        ],
+        "summary": "Deleta Tipo de Local por ID",
+        "description": "Deleta um Tipo de Local específico pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID do Tipo de Local",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deletado",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Tipo de local deletado com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Tipo de local não encontrado"
+          },
+          "500": {
+            "description": "Erro ao tentar deletar o Tipo de Local"
+          }
+        }
+      }
+    },
     "/uf": {
       "get": {
         "tags": [
@@ -4117,6 +4542,314 @@
           },
           "500": {
             "description": "Erro ao tentar deletar a UF"
+          }
+        }
+      }
+    },
+    "/usuario": {
+      "get": {
+        "tags": [
+          "Usuário"
+        ],
+        "summary": "Lista todos os usuários",
+        "description": "Retorna a lista completa de usuários (sem hash/salt).",
+        "responses": {
+          "200": {
+            "description": "Sucesso!",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total": {
+                  "type": "number",
+                  "example": 2
+                },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "usu_id": {
+                        "type": "number",
+                        "example": 2
+                      },
+                      "usu_email": {
+                        "type": "string",
+                        "example": "maria@example.com"
+                      },
+                      "usu_nome": {
+                        "type": "string",
+                        "example": "Maria Souza"
+                      },
+                      "usu_ativo": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "usu_criacao": {
+                        "type": "string",
+                        "example": "2024-03-01"
+                      },
+                      "usu_alteracao": {
+                        "type": "string",
+                        "example": "2024-03-20"
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "500": {
+            "description": "Erro ao buscar Usuários"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Usuário"
+        ],
+        "summary": "Cria um novo usuário",
+        "description": "Cria um usuário exigindo email, nome e senha. Internamente gera salt e hash.",
+        "parameters": [
+          {
+            "name": "obj",
+            "in": "body",
+            "required": true,
+            "description": "Dados para criação do usuário",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "type": "string",
+                  "example": "novo@exemplo.com"
+                },
+                "nome": {
+                  "type": "string",
+                  "example": "Novo Usuário"
+                },
+                "senha": {
+                  "type": "string",
+                  "example": "SenhaForte123"
+                }
+              },
+              "required": [
+                "email",
+                "nome",
+                "senha"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Usuário criado",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Usuário criado com sucesso!"
+                },
+                "id": {
+                  "type": "number",
+                  "example": 123
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitação Inválida"
+          },
+          "500": {
+            "description": "Erro ao tentar criar Usuário (ex.: campos obrigatórios ausentes)"
+          }
+        }
+      }
+    },
+    "/usuario/{id}": {
+      "get": {
+        "tags": [
+          "Usuário"
+        ],
+        "summary": "Consulta usuário por ID",
+        "description": "Retorna os dados públicos de um usuário específico.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID do usuário",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso!",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total": {
+                  "type": "number",
+                  "example": 1
+                },
+                "item": {
+                  "type": "object",
+                  "properties": {
+                    "usu_id": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "usu_email": {
+                      "type": "string",
+                      "example": "joao@example.com"
+                    },
+                    "usu_nome": {
+                      "type": "string",
+                      "example": "João da Silva"
+                    },
+                    "usu_ativo": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "usu_criacao": {
+                      "type": "string",
+                      "example": "2024-01-10"
+                    },
+                    "usu_alteracao": {
+                      "type": "string",
+                      "example": "2024-02-15"
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Usuário não encontrado"
+          },
+          "500": {
+            "description": "Erro ao buscar Usuário"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Usuário"
+        ],
+        "summary": "Atualiza parcialmente um usuário",
+        "description": "Atualiza nome e/ou senha. Exige a senha atual (pass) para validar.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID do usuário",
+            "example": 1
+          },
+          {
+            "name": "obj",
+            "in": "body",
+            "required": true,
+            "description": "Campos aceitos: name (novo nome), newpass (nova senha) e pass (senha atual - obrigatória)",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "pass": {
+                  "type": "string",
+                  "example": "SenhaAtual123"
+                },
+                "name": {
+                  "type": "string",
+                  "example": "Nome Atualizado"
+                },
+                "newpass": {
+                  "type": "string",
+                  "example": "NovaSenha456"
+                }
+              },
+              "required": [
+                "pass"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Senha inválida",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Senha inválida"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "id e pass são obrigatórios"
+          },
+          "404": {
+            "description": "Usuário não encontrado"
+          },
+          "500": {
+            "description": "Erro ao atualizar Usuário"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Usuário"
+        ],
+        "summary": "Deleta um usuário por ID",
+        "description": "Remove o usuário informado. Retorna mensagem de sucesso.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID do usuário",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Usuário deletado",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mensagem": {
+                  "type": "string",
+                  "example": "Usuário deletado com sucesso!"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "204": {
+            "description": "Nenhum Conteúdo"
+          },
+          "404": {
+            "description": "Usuário não encontrado"
+          },
+          "500": {
+            "description": "Erro ao tentar deletar o Usuário"
           }
         }
       }

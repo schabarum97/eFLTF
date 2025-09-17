@@ -25,7 +25,9 @@ const endpointsFiles = [
     './src/routes/ordempag.js',
     './src/routes/responsavel.js',
     './src/routes/status.js',
+    './src/routes/tipolocal.js',
     './src/routes/uf.js',
+    './src/routes/usuario.js',
     './src/routes/veiculo.js'
 ];
 
